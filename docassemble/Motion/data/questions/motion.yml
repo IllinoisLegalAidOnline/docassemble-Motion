@@ -1,0 +1,1452 @@
+metadata:
+  title: Motion
+  short title: Motion
+  comment: This program helps you ask a judge to do something in a court case you are involved in.
+  authors:
+    - Matt Newsted
+---
+include:
+  - docassemble.AssemblyLine:assembly_line.yml
+  - docassemble.ALToolbox:phone-number-validation.yml  
+  - docassemble.ILAO:ilao-interview-framework.yml
+  - docassemble.ILAO:shared-basic-questions.yml
+---
+objects:
+  - users: ALPeopleList.using(there_are_any=True)
+  - users[i].lawyer: ALIndividual
+  - other_parties: ALPeopleList.using(there_are_any=True)
+  - other_parties[i].lawyer: ALIndividual
+  - delivery_parties: ALPeopleList.using(there_are_any=True)
+  - delivery_parties[i].lawyer: ALIndividual
+  - court_list: ALCourtLoader.using(file_name='docassemble.ILAO:data/sources/il_courts.xlsx')
+---
+code: |
+  al_form_type = 'existing_case'
+  ilao_easy_form_title = "Motion"
+  ilao_easy_form_url = "https://www.illinoislegalaid.org/legal-information/motion"
+  form_name = "Motion"
+  github_user = 'IllinoisLegalAidOnline'
+  github_repo_name = 'docassemble-Motion'
+  allowed_courts = ['Circuit']
+---
+# Road map
+sections:
+  - section_intro: Start
+  - section_case_info: Case info
+  - section_motion: Motion details
+  - section_delivery: Notice and delivery
+  - section_about_you: About you
+  - section_download: Download  
+
+---
+# interview order block
+mandatory: True
+code: |
+  nav.set_section('section_intro')
+  sees_nav_bar
+  how_to_use
+  set_progress(5)
+  whats_next
+  accept_terms
+  lawsuit_information
+  
+  set_progress(15)
+  nav.set_section('section_case_info')
+  #user_ask_role
+  party_label
+  users.gather()
+  set_progress(20)
+  #other_parties.gather()
+  
+  if party_label == "plaintiff" or party_label == "petitioner":
+    if anyone_opposing == True:
+      other_parties.gather()
+  else:
+    anyone_opposing = True
+    other_parties.gather()
+  
+  set_progress(25)
+  # add in re: question here from fee waiver
+  # may need to rework this section ask if there is a defendant (see fee waiver, efile exempt)
+  if in_re_check == True:
+    in_re_label
+  trial_court
+  case_number
+  
+  set_progress(30)
+  nav.set_section('section_motion')
+  motion_summary
+  motion_body
+
+  set_progress(50)
+  nav.set_section('section_delivery')
+  delivery_intro
+  if delivery_parties.number() > 8:
+    extra_delivery_forms
+  set_progress(75)
+  for person in delivery_parties[:8]:
+    if person.is_represented:
+      person.lawyer.name.first
+    person.address.address
+    if person.knows_delivery_method:
+      person.mail_delivery
+      person.delivery_date
+  
+  for person in delivery_parties[:8]:
+    if person.knows_delivery_method == False or person.hand_delivery == True:
+      hand_delivery_info
+  e_signature
+
+  set_progress(75)
+  nav.set_section('section_about_you')
+  users[0].address.address
+  users[0].phone_number
+  if users[0].email_notice == True:
+    users[0].email
+
+  set_progress(100)
+  nav.set_section('section_download')
+  get_docs_screen
+
+---
+id: welcome
+question: |
+  Motion
+subquestion: |
+  Welcome to Illinois Legal Aid Online's **Motion** Easy Form.
+
+  This program creates an Motion form that asks the judge to do something in a court case you are involved in.
+  
+  Learn about [**responding to a lawsuit**](https://www.illinoislegalaid.org/node/32236).
+field: sees_nav_bar
+---
+id: instructions
+continue button field: how_to_use
+question: |
+  Instructions
+subquestion: |
+  To use this program you will need: 
+
+  * Names and addresses of the other parties, 
+  * Names and addresses of the other parties’ lawyers, and 
+  * The court case number. 
+
+  You can find this information on other court papers you have about this case. 
+
+  Set aside 5 to 10 minutes to finish this program. You can log in and save your work to return to later. 
+ 
+  ${ collapse_template(help_example) }  
+
+  Click on **{green words}** to learn what they mean. Some questions have a question mark in a circle ${ fa_icon("question-circle", color_css="#0dcaf0" ) } that also gives help.
+---
+template: help_example
+subject: |
+  **You can expand sections like this to show more information.**
+content: |  
+  This is an example of help. Click again to hide.
+---
+id: whats next
+continue button field: whats_next
+question: |
+  After you finish this program
+subquestion: |
+  After you download your **{Motion}**, you must file it with the court. This program does not file your ${ form_name } for you.
+  
+  Also, schedule court data and notify other parties.  
+  
+  Read the "How to File an Appearance" instructions you can download at the end of this program. 
+---
+id: accept terms
+question: |
+  Terms of use
+subquestion: |
+  This program does not provide legal advice. It does not take the place of advice from a lawyer.
+
+  Using this program does not create an attorney-client relationship between you and Illinois Legal Aid Online or its employees.
+
+  ${ collapse_template(get_legal_help) }  
+
+fields:
+  - To continue, you must accept the [**terms of use**](https://www.illinoislegalaid.org/about/terms-of-use).: accept
+    datatype: checkboxes
+    none of the above: False
+    minlength: 1
+    choices:
+      - I accept the terms of use.
+    validation messages:
+      minlength: |
+        You cannot continue unless you agree to the terms of use. 
+continue button field: accept_terms
+---
+template: get_legal_help
+subject: |
+  **What if I need legal advice?**
+content: |  
+  If you have questions or concerns about your legal problem and want legal advice you should talk to a lawyer.
+  
+  Use [**Get Legal Help**](https://www.illinoislegalaid.org/get-legal-help) to find free or low-cost legal services in your area.
+---
+id: not legal advice
+event: not_legal_advice
+question: |
+  Sorry
+subquestion: |
+  You cannot continue unless you understand this program does not give legal advice and accept the [**terms of use**](https://www.illinoislegalaid.org/about/terms-of-use).
+
+  This program will only help you complete the legal documents you want. By providing this program we are not giving you legal advice. Your use of this program does not mean that Illinois Legal Aid Online will provide you with a lawyer or with any individual legal help.
+
+  If you have questions or concerns about your legal problem and want legal advice you should talk to a lawyer. If you would like help finding free or low-cost legal services in your area, use [**Get Legal Help**](https://www.illinoislegalaid.org/get-legal-help).
+
+buttons:
+  - Exit: exit
+  - Restart: restart
+---
+id: lawsuit information
+continue button field: lawsuit_information
+question: |
+  Lawsuit information
+subquestion: |
+  If you received a Complaint and Summons, you have been sued. You need to tell the court you want to participate in your case. In some cases, you need to file an **{Answer}** to respond to the Complaint.
+  
+  If you do not respond, you can be found in default, and the court can rule against you. In some cases, like evictions, you do not need to file an **{Appearance}**. Instead, you can attend your court hearing.
+  
+  Learn more about [**responding to a lawsuit**](https://www.illinoislegalaid.org/node/32236).
+  
+  ${ collapse_template(started_lawsuit_help) }  
+  
+  If you would like help finding free or low-cost legal services in your area, use [**Get Legal Help**](https://www.illinoislegalaid.org/get-legal-help).
+---
+template: started_lawsuit_help
+subject: |
+  **What if I started the lawsuit?**
+content: |  
+  You can also file an Appearance if you started the lawsuit. Usually, you only need to file an Appearance if you had a lawyer in the case before, but now you want to represent yourself.
+---
+id: party label
+question: |
+  What is your party label in the case?
+subquestion: |
+  ${ collapse_template(which_party) }  
+field: party_label
+choices:
+  - Plaintiff: plaintiff
+  - Petitioner: petitioner
+  - Defendant: defendant
+  - Respondent: respondent
+---
+template: which_party
+subject: |
+  **How do I figure out my party label?**
+content: |
+  If you filed a new case, you are either the Plaintiff or the Petitioner.
+
+  If someone filed the case against you, you are either the Defendant or the Respondent.
+
+  The other court forms in the case should help you figure it out. Look at the top (the caption) of the Complaint or Petition. That form should have a label by your name.
+
+---
+id: any other users
+question: |
+  Is anyone else on your side of this case?
+subquestion: |
+  ${ collapse_template(other_users_help) }  
+
+  % if len(users.elements) > 1:  
+  So far you have told us about ${comma_and_list(users.complete_elements().full_names())}.
+  % endif  
+fields:
+  - "Anyone else?": users.there_is_another
+    datatype: yesnoradio
+---
+template: other_users_help
+subject: |
+  **How do I know if there are others?**
+content: |  
+  You said you are the ${ party_label.capitalize() }. The other people on your side of the case would be co-${ party_label}s.
+---
+id: any other party
+question: |
+  Are there ${ opposing_label }s in the case?
+subquestion: |
+  Certain kinds of cases do not have an opposing party, such as a Name Change or an Expungement case.
+fields:
+  - no label: anyone_opposing
+    datatype: yesnoradio
+
+---
+depends on:
+  - user_started_case
+sets:
+  - users[i].name.first
+id: other users names
+question: |
+  % if al_form_type in ['starts_case','existing_case','appeal']:
+  What is the name of the ${ ordinal(i) } person who is part of the case with you?
+  % else:
+  What is the name of the ${ ordinal(i) } person who is adding their name to
+  this form with you?
+  % endif
+subquestion: |
+  ${ collapse_template(long_name_help) }
+fields:
+  - code: |
+      users[i].name_fields(person_or_business='unsure')
+---
+template: long_name_help
+subject: |
+  **What if the person's name doesn't fit into 4 fields?**
+content: |
+  If the party has a long name like "Jane Smith, Director of Housing," select **Business or organization**. You can then enter the full name and title.
+---
+code: |
+  if party_label == 'plaintiff':
+    opposing_label = 'defendant'
+  if party_label == 'defendant':
+    opposing_label = 'plaintiff'
+  if party_label == 'petitioner':
+    opposing_label = 'respondent'
+  if party_label == 'respondent':
+    opposing_label = 'petitioner'
+---
+id: any other party
+question: |
+  Are there ${ opposing_label }s in the case?
+subquestion: |
+  Certain kinds of cases do not have an opposing party, such as a Name Change or an Expungement case.
+
+  ${ collapse_template(other_parties_help) }
+fields:
+  - no label: anyone_opposing
+    datatype: yesnoradio
+---
+template: other_parties_help
+subject: |
+  **How do I know if there are ${ opposing_label }s?**
+content: |  
+  You said you are the ${ party_label.capitalize() }. The people on the other side of the case would be ${ opposing_label}s.
+
+  Look at the top of the other court papers. If there are ${ opposing_label}s, you should see the names of other people listed as ${ opposing_label}s.
+---
+sets:
+  - other_parties[i].name.first
+id: other party name
+question: |
+  What is the name of the ${ ordinal(i) } ${ opposing_label }?
+subquestion: |
+  ${ collapse_template(long_name_help) }
+fields:
+  - code: |
+      other_parties[i].name_fields(person_or_business='unsure')
+---
+id: any more other parties
+question: |
+  Are there any other ${ opposing_label }s in the case?
+subquestion: |  
+  So far you have told us about ${comma_and_list(other_parties.complete_elements().full_names())}.
+fields:
+  - "Anyone else?": other_parties.there_is_another
+    datatype: yesnoradio
+---
+# modified other opposing parties question
+# add to basic questions
+#id: any other opposing parties
+#question: |
+#  % if users==plaintiffs:
+#  Is there another **defendant** or **respondent** in this case?
+#  % else:
+#  Is there another **plaintiff** or **petitioner** in this case?
+#  % endif
+#subquestion: |
+#  % if len(other_parties.elements) >= 1:  
+#  So far you have told us about ${comma_and_list(other_parties.complete_elements().full_names())}.
+#  % endif
+#fields:
+#  - "Anyone else?": other_parties.there_is_another
+#    datatype: yesnoradio
+#---
+#depends on:
+#  - user_started_case
+#sets:
+#  - other_parties[i].name.first
+#id: names of opposing parties
+#question: |
+#  % if users==plaintiffs:
+#  Name of ${ ordinal(i) } **defendant** or **respondent** in this case
+#  % else:
+#  Name of ${ ordinal(i) } **plaintiff** or **petitioner** in this case
+#  % endif
+#subquestion: |
+#  ${ collapse_template(long_name_help) }
+#fields:
+#  - code: |
+#      other_parties[i].name_fields(person_or_business='unsure')
+---
+id: trial court county
+continue button field: case_county
+question: |
+  In which county was this case filed?
+fields:
+  - no label: trial_court_index
+    datatype: integer
+    code: |
+      court_county_lookup()
+#fields:
+#  - no label: trial_court_index
+#    code: |
+#      court_list._load_courts()['address_county'].items()
+---
+code: |
+  def court_county_lookup(lowercase=False):
+    all_court_counties = court_list._load_courts()['address_county'].items()
+    filtered_courts = [(-1, "cook")] if lowercase else [(-1, "Cook")]
+    for court in all_court_counties:
+      if court[1] != "Cook":
+        court_name = court[1].lower() if lowercase else court[1]
+        filtered_courts.append((court[0],court_name))
+    return sorted( filtered_courts, key=lambda y: y[1])
+
+---
+id: in re check
+question: |
+ Does the court case have the words "**In re:**" in the name?
+subquestion: |
+  Look at the name of the case at the top of the court papers. “In re” is often used in probate, bankruptcy, and some family law cases. For example, a probate case regarding Jane Doe’s estate might be called “In re: Estate of Jane Doe.”
+fields:
+  - no label: in_re_check
+    datatype: yesnoradio
+---
+id: in re label
+question: |
+  What does it say after "**In re:**" on the court papers?
+fields:
+  - In re:: in_re_label
+    maxlength: 50
+---
+depends on:
+  - trial_court_index
+code: |
+  if trial_court_index == -1:
+    trial_court = court_list.as_court('trial_court', 15)
+    trial_court.address.county = "Cook"
+  else:
+    trial_court = court_list.as_court('trial_court', trial_court_index)
+---
+id: case number
+question: |
+  What is the case number?
+subquestion: |
+  ${ collapse_template(case_number_help) }  
+fields:
+  - Case number: case_number
+---
+template: case_number_help
+subject: |
+  **Where can I find this?**
+content: |  
+  The case number should be on your court papers. Look at the Complaint or Petition, or the Summons if you received one. It is usually in the top-right part of the first page.
+  
+  If you started the case, the court clerk should have given you the case number.
+  
+  In this example, the case number is **2022 EXAMPLE 123**.
+  
+  [FILE case_number_example.png, 100%, Summons form showing case number]
+  
+---  
+id: motion summary
+question: |
+  Motion summary
+subquestion: |
+  In a few words, explain what you want the judge to do in this court case.
+fields:
+  - Motion summary: motion_summary
+    maxlength: 60
+---
+id: motion body
+question: |
+  What do you want the judge to do?
+subquestion: |
+  Explain what you want the judge to do in your court case. Be sure to state why it should be done.
+fields:
+  - Motion: motion_body
+    input type: area
+    rows: 15
+ 
+---
+id: phone number
+question: |
+  What is your phone number?
+subquestion: |
+  If you do not want to list your phone number on your form, leave this blank.
+fields:
+  - Phone: users[0].phone_number
+    datatype: al_international_phone
+    required: False
+---
+id: notice by email
+question: |
+  Do you have an email address?
+subquestion: |
+  If you have an email address, you must list it so the court and other parties can contact you about this case.
+fields:
+  - "Email?": users[0].email_notice
+    datatype: yesnoradio
+---
+id: email address
+question: |
+  What email address do you want to list on your court forms?
+subquestion: |
+  If you do not want to enter your personal email address, you can create a new email account to get email about your case.
+  
+  Be sure to check this email daily, otherwise you may miss important information about your case.
+fields:
+  - Email address: users[0].email    
+    datatype: email
+    #required: False
+---
+id: e-signature
+question: |
+  Do you want to add your e-signature to your ${ form_name }?
+subquestion: |
+  If you do not add your **{e-signature}**, you must sign your paper form before you file and deliver it.
+
+  ${ collapse_template(signature_help) }  
+fields:
+  - "Add e-signature?": e_signature
+    datatype: yesnoradio
+terms:
+  - "e-signature": |
+      An e-signature is an electronic signature. It is a digital version of a signature that has the same effect as a hand-written signature. 
+---
+template: signature_help
+subject: |
+  **What does it mean to sign the *Motion*?**
+content: |  
+  By signing your *Motion*, you are certifying that:
+  
+  * Everything on the form is true and correct, and
+  * You understand that making a false statement on the form is perjury, which can result in criminal penalties.
+  
+  See the [**Code of Civil Procedure, 735 ILCS 5/1-109**](https://www.ilga.gov/legislation/ilcs/documents/073500050k1-109.htm), for more information.
+---
+reconsider: True
+code: |
+  delivery_parties = DAList("delivery_parties", elements = other_parties + users[1:])
+# changed order to keep it a DAList
+---
+id: extra delivery forms required
+continue button field: extra_delivery_forms
+question: |
+  Additional Proof of Delivery
+subquestion: |
+  This program makes the Proof of Delivery forms for the first 8 parties.
+  
+  You will need to fill out *Additional Proof of Delivery* forms for the other parties in your case. 
+  
+  You can download blank *Additional Proof of Delivery* forms at the end of this program.
+---
+id: delivery intro
+continue button field: delivery_intro
+question: |
+  Send your ${ form_name } to all other parties
+subquestion: |
+  These are the other parties in this case: ${comma_and_list(delivery_parties)}.
+
+  You must send a copy of your ${ form_name } to each of them.
+
+  If someone in the case has a lawyer, you must send it to the lawyer.
+---
+id: has lawyer
+generic object: ALIndividual
+question: |
+  Does ${ x.name.full(middle="full") } have a lawyer in this case?
+field: x.is_represented
+choices:
+  - Yes: True
+  - No: False
+  - I don't know: null 
+# note: null will be None in review screen
+---
+id: add lawyer
+generic object: ALIndividual
+question: |
+  Who is  ${ x.name.full(middle="full") }'s lawyer?
+fields:
+  - First name: x.lawyer.name.first
+  - Middle name: x.lawyer.name.middle
+    required: False
+  - Last name: x.lawyer.name.last
+  - Suffix: x.lawyer.name.suffix
+    code: |
+      name_suffix()
+    required: False  
+---
+id: delivery party address
+sets:
+  - x.address.address
+  - x.address.city
+  - x.address.zip
+generic object: ALIndividual
+question: |
+  % if x.is_represented:
+  What is ${ x.lawyer.name.full(middle="full") }'s address?
+  % else:
+  What is ${ x.name.full(middle="full") }'s address?
+  % endif
+fields:
+  - Street address: x.address.address
+    address autocomplete: True
+  - Address line 2: x.address.unit
+    required: False
+  - City: x.address.city
+  - State: x.address.state
+    code: |
+      states_list()
+    default: IL      
+  - ZIP code: x.address.zip
+---
+#added to remove same as / someplace else default in ql_baseline.yml
+id: users delivery party address
+sets:
+  - users[i].address.address
+  - users[i].address.city
+  - users[i].address.zip
+generic object: ALIndividual
+question: |
+  % if users[i].is_represented:
+  What is ${ users[i].lawyer.name.full(middle="full") }'s address?
+  % else:
+  What is ${ users[i].name.full(middle="full") }'s address?
+  % endif
+fields:
+  - Street address: users[i].address.address
+    address autocomplete: True
+  - Address line 2: users[i].address.unit
+    required: False
+  - City: users[i].address.city
+  - State: users[i].address.state
+    code: |
+      states_list()
+    default: IL      
+  - ZIP code: users[i].address.zip
+
+---
+id: knows delivery method
+generic object: ALIndividual
+question: |
+  % if x.is_represented:
+  Do you know **how** and **when** you will send your ${ form_name } to ${ x.lawyer.name.full(middle="full") }?
+  % else:
+  Do you know **how** and **when** you will send your ${ form_name } to ${ x.name.full(middle="full") }?
+  % endif
+subquestion: |
+  ${ collapse_template(delivery_method_help) }  
+
+  If you do not know this now, you can add it to the Proof of Delivery section of your forms later.
+field: x.knows_delivery_method
+choices:
+  - Yes: True
+  - No: False
+---
+template: delivery_method_help
+subject: |
+  **What are my delivery options?**
+content: |  
+  You can deliver the forms by:
+  
+  * The court's e-filing system,
+  * Email,
+  * US mail or delivery company (like UPS or FedEx), or
+  * Hand delivery.
+
+  You may use US mail, a delivery company, or hand delivery if you or the other party **does not** have an email address.
+---
+id: user party delivery method
+#changed from generic object to users to allow for changing answers via Back
+#generic object: ALIndividual
+question: |
+  % if users[i].is_represented:
+  How will you send your ${ form_name } to ${ users[i].lawyer.name.full(middle="full") }?
+  % else:
+  How will you send your ${ form_name } to ${ users[i].name.full(middle="full") }?
+  % endif
+subquestion: |  
+  You may use US mail, a delivery company, or hand delivery if you or the other party **does not** have an email address.
+  
+  ${ collapse_template(efiling_help) }  
+fields:
+  - E-filing system: users[i].efm_delivery
+    datatype: yesnowide
+    help: |
+      The court's e-filing system could be an electronic filing manager (EFM) or an approved electronic filing service provider (EFSP).
+  - Email: users[i].email_delivery
+    datatype: yesnowide
+  - Email address: users[i].delivery_email
+    datatype: email
+    show if: 
+      variable: users[i].email_delivery
+      is: True
+    required: False
+  - US mail or delivery company (like UPS or FedEx): users[i].mail_delivery
+    datatype: yesnowide
+  - Hand delivery: users[i].hand_delivery
+    datatype: yesnowide
+---
+template: efiling_help
+subject: |
+  **What if I need help?**
+content: |  
+  If you need help delivering by email or using the e-filing service provider, you can visit a [**Legal Self-Help Center**](https://www.illinoislegalaid.org/get-legal-help/lshc-directory) or you can call or text [**Illinois Court Help**](https://www.ilcourthelp.gov) at 833-411-1121.
+---
+id: other party delivery method
+# generic object: ALIndividual
+#changed from generic object to other_parties to allow for changing answers via Back
+question: |
+  % if other_parties[i].is_represented:
+  How will you send your ${ form_name } to ${ other_parties[i].lawyer.name.full(middle="full") }?
+  % else:
+  How will you send your ${ form_name } to ${ other_parties[i].name.full(middle="full") }?
+  % endif
+subquestion: |  
+  You may use US mail, a delivery company, or hand delivery if you or the other party **does not** have an email address.
+  
+  ${ collapse_template(efiling_help) }  
+fields:
+  - E-filing system: other_parties[i].efm_delivery
+    datatype: yesnowide
+    help: |
+      The court's e-filing system could be an electronic filing manager (EFM) or an approved electronic filing service provider (EFSP).
+  - Email: other_parties[i].email_delivery
+    datatype: yesnowide
+  - Email address: other_parties[i].delivery_email
+    datatype: email
+    show if: 
+      variable: other_parties[i].email_delivery
+      is: True
+    required: False
+  - US mail or delivery company (like UPS or FedEx): other_parties[i].mail_delivery
+    datatype: yesnowide
+  - Hand delivery: other_parties[i].hand_delivery
+    datatype: yesnowide
+---
+id: delivery time
+generic object: ALIndividual
+question: |
+  % if x.is_represented:
+  When will you send your ${ form_name } to ${ x.lawyer.name.full(middle="full") }?
+  % else:
+  When will you send your ${ form_name } to ${ x.name.full(middle="full") }?
+  % endif
+fields:
+  - Date: x.delivery_date
+    datatype: date
+    default: ${ today().format("yyyy-MM-dd") }
+    min: ${ today().format("yyyy-MM-dd") }
+    max: ${ today().plus(years=1) }
+  - Time: x.delivery_time
+    datatype: time
+---
+id: hand delivery info
+continue button field: hand_delivery_info
+#generic object: ALIndividual
+question: |
+  Complete your Proof of Delivery
+subquestion: |
+
+  Make sure you complete the Proof of Delivery section of your forms. 
+  
+  Instructions when delivering your forms by hand:
+
+  * If a party in your case does not have a lawyer, you can hand-deliver to them or to a family member who is 13 or older at their home.
+  * If they do have a lawyer, you can hand-deliver to the lawyer or to the lawyer's office.
+  
+  [FILE proof_of_delivery_snip.png, 100%, Proof of Delivery section of forms]
+
+---
+id: get docs screen
+event: get_docs_screen
+question: |
+  Download
+subquestion: |
+  
+  Your forms are ready. View and download your forms below. Click **Make changes** to fix any mistakes.
+
+  This program does not file your Motion with the court or deliver it to other parties in your case. You will need to do this yourself. Learn about [**e-filing in Illinois**](https://www.illinoiscourts.gov/eservices/efileil/).
+
+  ${ action_button_html(url_action('review_answers'), label=':edit: Make changes', color='success', size="md") }
+  
+  ${ al_user_bundle.download_list_html() }
+
+  &nbsp;
+
+  ${ al_user_bundle.send_button_html(show_editable_checkbox=False) }
+
+  **Note:** This program does not file your Motion with the court or deliver it to other parties in your case. Learn about [**e-filing in Illinois**](https://www.illinoiscourts.gov/eservices/efileil/).
+  
+  Thank you for using ILAO Easy Forms!
+under: |
+  % if not user_logged_in():
+  [${fa_icon("sign-in-alt", color="#0079d0", size="sm")} **Sign-in**](${url_of('login', next=interview_url())}) or [**create**](${url_of('register', next=interview_url())}) an ILAO Easy Form account to save your progress (optional).
+  % endif 
+
+  &nbsp;
+  ${ action_button_html(interview_url(i="docassemble.ILAO:feedback.yml", easy_form_interview=ilao_easy_form_url, easy_form_title=ilao_easy_form_title, easy_form_page=user_info().question_id, easy_form_variable=user_info().variable, local=False,reset=1), label=':comment: Was this program helpful?', color="#181c36", size="md", new_window=True) }
+---
+generic object: ALDocumentBundle
+template: x.send_email_template
+subject: |
+  Motion forms
+content: |
+  Your forms are attached.
+  
+  Thanks for using ILAO Easy Forms!
+  
+  [Illinois Legal Aid Online](https://www.illinoislegalaid.org)
+---
+objects:
+  - motion_attachment: ALDocument.using(title="Motion", filename="motion.pdf", has_addendum=True, default_overflow_message=" [Continued on Additional Motion]")
+  - motion_instructions: ALDocument.using(title="Instructions", filename="instructions.pdf", has_addendum=False)
+  - motion_additional_delivery: ALDocument.using(title="Additional Proof of Delivery", filename="motion_additional_proof_delivery.pdf", has_addendum=False)
+  - motion_additional_delivery_2: ALDocument.using(title="Additional Proof of Delivery 2", filename="appearance_additional_proof_delivery_2.pdf", has_addendum=False)
+  - motion_additional_delivery_3: ALDocument.using(title="Additional Proof of Delivery 3", filename="appearance_additional_proof_delivery_3.pdf", has_addendum=False)
+  - motion_additional_delivery_blank: ALDocument.using(title="Additional Proof of Delivery (blank)", filename="motion_additional_proof_delivery_blank.pdf", has_addendum=False)
+  
+#  
+#  
+#  - illinois_appearance_attachment: ALDocument.using(title="Appearance", filename="appearance.pdf", has_addendum=False)
+#  - illinois_appearance_instructions: ALDocument.using(title="Instructions", filename="instructions.pdf", has_addendum=False)
+#  - illinois_appearance_additional: ALDocument.using(title="Additional Proof of Delivery", filename="appearance_additional_proof_delivery.pdf", has_addendum=False)
+#  - illinois_appearance_additional_2: ALDocument.using(title="Additional Proof of Delivery 2", filename="appearance_additional_proof_delivery_2.pdf", has_addendum=False)
+#  - illinois_appearance_additional_3: ALDocument.using(title="Additional Proof of Delivery 3", filename="appearance_additional_proof_delivery_3.pdf", has_addendum=False)
+#  - illinois_appearance_additional_blank: ALDocument.using(title="Additional Proof of Delivery (blank)", filename="appearance_additional_proof_delivery_blank.pdf", has_addendum=False)
+---
+code: |
+  motion_attachment.enabled = False
+  motion_instructions.enabled = False
+  motion_additional_delivery.enabled = False
+  motion_additional_delivery_2.enabled = False
+  motion_additional_delivery_3.enabled = False
+  motion_additional_delivery_blank.enabled = False
+
+  if delivery_parties.number() < 3:
+    motion_attachment.enabled = True
+    motion_instructions.enabled = True
+  elif delivery_parties.number() < 5:
+    motion_attachment.enabled = True
+    motion_instructions.enabled = True
+    motion_additional_delivery.enabled = True
+  elif delivery_parties.number() < 7:
+    motion_attachment.enabled = True
+    motion_instructions.enabled = True
+    motion_additional_delivery.enabled = True
+    motion_additional_delivery_2.enabled = True
+  elif delivery_parties.number() < 9:
+    motion_attachment.enabled = True
+    motion_instructions.enabled = True
+    motion_additional_delivery.enabled = True
+    motion_additional_delivery_2.enabled = True
+    motion_additional_delivery_3.enabled = True
+  else:
+    motion_attachment.enabled = True
+    motion_instructions.enabled = True
+    motion_additional_delivery.enabled = True
+    motion_additional_delivery_2.enabled = True
+    motion_additional_delivery_3.enabled = True
+    motion_additional_delivery_blank.enabled = True
+---
+objects:
+  - al_user_bundle: ALDocumentBundle.using(elements=[motion_instructions, motion_single_pdf_bundle, motion_additional_delivery_blank], filename="motion.pdf", title="Download all forms")
+  - al_court_bundle: ALDocumentBundle.using(elements=[motion_single_pdf_bundle], filename="motion.pdf", title="Motion")
+---
+objects:
+  - motion_single_pdf_bundle: ALDocumentBundle.using(elements=[motion_attachment, motion_additional_delivery, motion_additional_delivery_2, motion_additional_delivery_3], filename="motion.pdf", title="Motion", enabled=True)
+---
+code: |
+  motion_attachment.overflow_fields['motion_body'].overflow_trigger = 640
+  motion_attachment.overflow_fields.gathered = True  
+---
+attachment:
+  variable name: motion_instructions[i]
+  name: motion_instructions
+  filename: motion-instructions
+  skip undefined: True
+  editable: False
+  pdf template file: motion_instructions.pdf
+  fields:
+      - "fake": ${ "" }
+---
+attachment:
+  variable name: motion_attachment[i]
+  name: motion
+  filename: motion
+  skip undefined: True
+  editable: False
+  pdf template file: motion.pdf
+  fields:
+      - "in_re": ${ "In re:" if in_re_check == True else ""} ${ in_re_label if in_re_check == True else ""}
+      - "trial_court_county": ${ trial_court.address.county.upper() }
+      #- "plaintiffs": ${ users.full_names() if user_ask_role == 'plaintiff' else other_parties.full_names() }
+      #- "defendants": ${ other_parties.full_names() if user_ask_role == 'plaintiff' else users.full_names() }
+
+      - "plaintiffs": ${ users.full_names() if party_label == "plaintiff" or party_label == "petitioner" else other_parties.full_names()}
+      - "defendants": ${list_defendants(users.full_names(), other_parties.full_names(), anyone_opposing, party_label)}
+
+      - "user__1": ${ users[0].name.full(middle="full") }
+      - "user__2": ${ users[0].name.full(middle="full") }
+      - "user__3": ${ users[0].name.full(middle="full") }
+      - "user_mail_address_line_one__1": ${ users[0].address.line_one(bare=True) }
+      - "user_mail_address_line_one__2": ${ users[0].address.line_one(bare=True) }
+      - "user_mail_address_city_state_zip__1": ${ users[0].address.line_two() }
+      - "user_mail_address_city_state_zip__2": ${ users[0].address.line_two() }
+      - "user_phone_number__1": ${ phone_number_formatted(users[0].phone_number) }
+      - "user_phone_number__2": ${ phone_number_formatted(users[0].phone_number) }
+      - "user_email": ${ users[0].email if users[0].email_notice else '' }
+      - "user_email__2": ${ users[0].email if users[0].email_notice else '' }
+      - "case_number__1": ${ case_number }
+      - "case_number__2": ${ case_number }
+      - "case_number__3": ${ case_number }
+      - "e_sign_name__1": ${ users[0].name.full(middle="full") if e_signature else '' }
+      - "e_sign_name__2": ${ users[0].name.full(middle="full") if e_signature else '' }
+      - "is_email_notice_yes": ${ users[0].email_notice }
+      - "motion_by_plaintiff": ${ party_label == "plaintiff" or party_label == "petitioner" }
+      - "motion_by_defendant": ${ party_label == "defendant" or party_label == "respondent" }
+      - "motion_summary": ${ motion_summary }
+      - "motion_body": ${ motion_attachment.safe_value('motion_body', preserve_newlines=True) }
+      - "delivery_party1_name_full": | 
+          % if delivery_parties[0].is_represented:
+          ${ delivery_parties[0].lawyer.name.full(middle="full") }, (lawyer for ${ delivery_parties[0].name.full(middle="full") })
+          % else:
+          ${ delivery_parties[0].name.full(middle="full") }
+          % endif
+      - "delivery_party1_mail_address_on_one_line": ${ delivery_parties[0].address.on_one_line(bare=True) }
+      - "delivery_party1_email": ${ delivery_parties[0].delivery_email if delivery_parties[0].knows_delivery_method else '' }
+      - "is_delivery_party1_hand_yes": ${ delivery_parties[0].hand_delivery if delivery_parties[0].knows_delivery_method else '' }
+      - "is_delivery_party1_mail_yes": ${ delivery_parties[0].mail_delivery if delivery_parties[0].knows_delivery_method else '' }
+      - "is_delivery_party1_efm_yes": ${ delivery_parties[0].efm_delivery if delivery_parties[0].knows_delivery_method else '' }
+      - "is_delivery_party1_email_yes": ${ delivery_parties[0].email_delivery if delivery_parties[0].knows_delivery_method else '' }
+      - "delivery_party1_date": ${ delivery_parties[0].delivery_date if delivery_parties[0].knows_delivery_method else '' }
+      - "delivery_party1_time": ${ format_time(delivery_parties[0].delivery_time, format='h:mm') if delivery_parties[0].knows_delivery_method else '' }
+      - "is_delivery_party1_am_yes": ${ True if format_time(delivery_parties[0].delivery_time, format='a')=='AM' else '' }
+      - "is_delivery_party1_am_no": ${ True if format_time(delivery_parties[0].delivery_time, format='a')=='PM' else '' }
+
+      - "delivery_party2_name_full": | 
+          % if delivery_parties[1].is_represented:
+          ${ delivery_parties[1].lawyer.name.full(middle="full") }, (lawyer for ${ delivery_parties[1].name.full(middle="full") })
+          % else:
+          ${ delivery_parties[1].name.full(middle="full") }
+          % endif
+      - "delivery_party2_mail_address_on_one_line": ${ delivery_parties[1].address.on_one_line(bare=True) }
+      - "delivery_party2_email": ${ delivery_parties[1].delivery_email if delivery_parties[1].knows_delivery_method else '' }
+      - "is_delivery_party2_hand_yes": ${ delivery_parties[1].hand_delivery if delivery_parties[1].knows_delivery_method else '' }
+      - "is_delivery_party2_mail_yes": ${ delivery_parties[1].mail_delivery if delivery_parties[1].knows_delivery_method else '' }
+      - "is_delivery_party2_efm_yes": ${ delivery_parties[1].efm_delivery if delivery_parties[1].knows_delivery_method else '' }
+      - "is_delivery_party2_email_yes": ${ delivery_parties[1].email_delivery if delivery_parties[1].knows_delivery_method else '' }
+      - "delivery_party2_date": ${ delivery_parties[1].delivery_date if delivery_parties[1].knows_delivery_method else '' }
+      - "delivery_party2_time": ${ format_time(delivery_parties[1].delivery_time, format='h:mm') if delivery_parties[1].knows_delivery_method else '' }
+      - "is_delivery_party2_am_yes": ${ True if format_time(delivery_parties[1].delivery_time, format='a')=='AM' else '' }
+      - "is_delivery_party2_am_no": ${ True if format_time(delivery_parties[1].delivery_time, format='a')=='PM' else '' }
+
+      - "is_additional_proof_delivery_yes": ${ delivery_parties.number() > 2 }
+---
+attachment:
+  variable name: motion_attachment.addendum
+  pdf template file: additional_motion.pdf
+  skip undefined: True
+  editable: False
+  fields:
+      - "in_re": ${ "In re:" if in_re_check == True else ""} ${ in_re_label if in_re_check == True else ""}
+      - "trial_court_county": ${ trial_court.address.county.upper() }
+      - "plaintiffs": ${ users.full_names() if party_label == "plaintiff" or party_label == "petitioner" else other_parties.full_names()}
+      - "defendants": ${list_defendants(users.full_names(), other_parties.full_names(), anyone_opposing, party_label)}
+      
+      - "case_number__1": ${ case_number }
+      - "motion_summary": ${ motion_summary }
+      - "motion_body": ${ motion_attachment.overflow_value('motion_body', preserve_newlines=True) }
+---
+attachment:
+  variable name: motion_additional_delivery[i]
+  name: motion_additional_delivery
+  filename: motion-additional-delivery
+  skip undefined: True
+  editable: False
+  pdf template file: motion_additional_proof_delivery.pdf
+  fields:
+      - "in_re": ${ "In re:" if in_re_check == True else ""} ${ in_re_label if in_re_check == True else ""}
+      - "trial_court_county": ${ trial_court.address.county.upper() }
+      - "case_number__1": ${ case_number }
+      - "case_number__2": ${ case_number }
+      - "plaintiffs": ${ users.full_names() if party_label == "plaintiff" or party_label == "petitioner" else other_parties.full_names()}
+      - "defendants": ${list_defendants(users.full_names(), other_parties.full_names(), anyone_opposing, party_label)}
+
+
+      - "form_to_be_delivered": ${ form_name }
+      - "delivery_party1_name_full": | 
+          % if delivery_parties[2].is_represented:
+          ${ delivery_parties[2].lawyer.name.full(middle="full") }, (lawyer for ${ delivery_parties[2].name.full(middle="full") })
+          % else:
+          ${ delivery_parties[2].name.full(middle="full") }
+          % endif
+      - "delivery_party1_mail_address_on_one_line": ${ delivery_parties[2].address.on_one_line(bare=True) }
+      - "delivery_party1_email": ${ delivery_parties[2].delivery_email if delivery_parties[2].knows_delivery_method else '' }
+      - "is_delivery_party1_hand_yes": ${ delivery_parties[2].hand_delivery if delivery_parties[2].knows_delivery_method else '' }
+      - "is_delivery_party1_mail_yes": ${ delivery_parties[2].mail_delivery if delivery_parties[2].knows_delivery_method else '' }
+      - "is_delivery_party1_efm_yes": ${ delivery_parties[2].efm_delivery if delivery_parties[2].knows_delivery_method else '' }
+      - "is_delivery_party1_email_yes": ${ delivery_parties[2].email_delivery if delivery_parties[2].knows_delivery_method else '' }
+      - "delivery_party1_date": ${ delivery_parties[2].delivery_date if delivery_parties[2].knows_delivery_method else '' }
+      - "delivery_party1_time": ${ format_time(delivery_parties[2].delivery_time, format='h:mm') if delivery_parties[2].knows_delivery_method else '' }
+      - "is_delivery_party1_am_yes": ${ True if format_time(delivery_parties[2].delivery_time, format='a')=='AM' else '' }
+      - "is_delivery_party1_am_no": ${ True if format_time(delivery_parties[2].delivery_time, format='a')=='PM' else '' }
+      
+      - "delivery_party2_name_full": | 
+          % if delivery_parties[3].is_represented:
+          ${ delivery_parties[3].lawyer.name.full(middle="full") }, (lawyer for ${ delivery_parties[3].name.full(middle="full") })
+          % else:
+          ${ delivery_parties[3].name.full(middle="full") }
+          % endif
+      - "delivery_party2_mail_address_on_one_line": ${ delivery_parties[3].address.on_one_line(bare=True) }
+      - "delivery_party2_email": ${ delivery_parties[3].delivery_email if delivery_parties[3].knows_delivery_method else '' }
+      - "is_delivery_party2_hand_yes": ${ delivery_parties[3].hand_delivery if delivery_parties[3].knows_delivery_method else '' }
+      - "is_delivery_party2_mail_yes": ${ delivery_parties[3].mail_delivery if delivery_parties[3].knows_delivery_method else '' }
+      - "is_delivery_party2_efm_yes": ${ delivery_parties[3].efm_delivery if delivery_parties[3].knows_delivery_method else '' }
+      - "is_delivery_party2_email_yes": ${ delivery_parties[3].email_delivery if delivery_parties[3].knows_delivery_method else '' }
+      - "delivery_party2_date": ${ delivery_parties[3].delivery_date if delivery_parties[3].knows_delivery_method else '' }
+      - "delivery_party2_time": ${ format_time(delivery_parties[3].delivery_time, format='h:mm') if delivery_parties[3].knows_delivery_method else '' }
+      - "is_delivery_party2_am_yes": ${ True if format_time(delivery_parties[3].delivery_time, format='a')=='AM' else '' }
+      - "is_delivery_party2_am_no": ${ True if format_time(delivery_parties[3].delivery_time, format='a')=='PM' else '' }
+
+      - "user": ${ users[0].name.full(middle="full") }
+      - "user_mail_address_line_one": ${ users[0].address.line_one(bare=True) }
+      - "user_mail_address_city_state_zip": ${ users[0].address.line_two() }
+      - "user_phone_number": ${ phone_number_formatted(users[0].phone_number) }
+      - "user_email": ${ users[0].email if users[0].email_notice else '' }
+      - "e_sign_name": ${ users[0].name.full(middle="full") if e_signature else '' }
+---
+attachment:
+  variable name: motion_additional_delivery_2[i]
+  name: motion_additional_delivery_2
+  filename: motion-additional-delivery-2
+  skip undefined: True
+  editable: False
+  pdf template file: motion_additional_proof_delivery.pdf
+  fields:
+      - "in_re": ${ "In re:" if in_re_check == True else ""} ${ in_re_label if in_re_check == True else ""}
+      - "trial_court_county": ${ trial_court.address.county.upper() }
+      - "case_number__1": ${ case_number }
+      - "case_number__2": ${ case_number }
+      - "plaintiffs": ${ users.full_names() if party_label == "plaintiff" or party_label == "petitioner" else other_parties.full_names()}
+      - "defendants": ${list_defendants(users.full_names(), other_parties.full_names(), anyone_opposing, party_label)}
+
+      - "form_to_be_delivered": ${ form_name }
+
+      - "delivery_party1_name_full": | 
+          % if delivery_parties[4].is_represented:
+          ${ delivery_parties[4].lawyer.name.full(middle="full") }, (lawyer for ${ delivery_parties[4].name.full(middle="full") })
+          % else:
+          ${ delivery_parties[4].name.full(middle="full") }
+          % endif
+      - "delivery_party1_mail_address_on_one_line": ${ delivery_parties[4].address.on_one_line(bare=True) }
+      - "delivery_party1_email": ${ delivery_parties[4].delivery_email if delivery_parties[4].knows_delivery_method else '' }
+      - "is_delivery_party1_hand_yes": ${ delivery_parties[4].hand_delivery if delivery_parties[4].knows_delivery_method else '' }
+      - "is_delivery_party1_mail_yes": ${ delivery_parties[4].mail_delivery if delivery_parties[4].knows_delivery_method else '' }
+      - "is_delivery_party1_efm_yes": ${ delivery_parties[4].efm_delivery if delivery_parties[4].knows_delivery_method else '' }
+      - "is_delivery_party1_email_yes": ${ delivery_parties[4].email_delivery if delivery_parties[4].knows_delivery_method else '' }
+      - "delivery_party1_date": ${ delivery_parties[4].delivery_date if delivery_parties[4].knows_delivery_method else '' }
+      - "delivery_party1_time": ${ format_time(delivery_parties[4].delivery_time, format='h:mm') if delivery_parties[4].knows_delivery_method else '' }
+      - "is_delivery_party1_am_yes": ${ True if format_time(delivery_parties[4].delivery_time, format='a')=='AM' else '' }
+      - "is_delivery_party1_am_no": ${ True if format_time(delivery_parties[4].delivery_time, format='a')=='PM' else '' }
+      
+      - "delivery_party2_name_full": | 
+          % if delivery_parties[5].is_represented:
+          ${ delivery_parties[5].lawyer.name.full(middle="full") }, (lawyer for ${ delivery_parties[5].name.full(middle="full") })
+          % else:
+          ${ delivery_parties[5].name.full(middle="full") }
+          % endif
+      - "delivery_party2_mail_address_on_one_line": ${ delivery_parties[5].address.on_one_line(bare=True) }
+      - "delivery_party2_email": ${ delivery_parties[5].delivery_email if delivery_parties[5].knows_delivery_method else '' }
+      - "is_delivery_party2_hand_yes": ${ delivery_parties[5].hand_delivery if delivery_parties[5].knows_delivery_method else '' }
+      - "is_delivery_party2_mail_yes": ${ delivery_parties[5].mail_delivery if delivery_parties[5].knows_delivery_method else '' }
+      - "is_delivery_party2_efm_yes": ${ delivery_parties[5].efm_delivery if delivery_parties[5].knows_delivery_method else '' }
+      - "is_delivery_party2_email_yes": ${ delivery_parties[5].email_delivery if delivery_parties[5].knows_delivery_method else '' }
+      - "delivery_party2_date": ${ delivery_parties[5].delivery_date if delivery_parties[5].knows_delivery_method else '' }
+      - "delivery_party2_time": ${ format_time(delivery_parties[5].delivery_time, format='h:mm') if delivery_parties[5].knows_delivery_method else '' }
+      - "is_delivery_party2_am_yes": ${ True if format_time(delivery_parties[5].delivery_time, format='a')=='AM' else '' }
+      - "is_delivery_party2_am_no": ${ True if format_time(delivery_parties[5].delivery_time, format='a')=='PM' else '' }
+
+      - "user": ${ users[0].name.full(middle="full") }
+      - "user_mail_address_line_one": ${ users[0].address.line_one(bare=True) }
+      - "user_mail_address_city_state_zip": ${ users[0].address.line_two() }
+      - "user_phone_number": ${ phone_number_formatted(users[0].phone_number) }
+      - "user_email": ${ users[0].email if users[0].email_notice else '' }
+      - "e_sign_name": ${ users[0].name.full(middle="full") if e_signature else '' }
+---
+attachment:
+  variable name: motion_additional_delivery_3[i]
+  name: motion_additional_delivery_3
+  filename: motion-additional-delivery-3
+  skip undefined: True
+  editable: False
+  pdf template file: motion_additional_proof_delivery.pdf
+  fields:
+      - "in_re": ${ "In re:" if in_re_check == True else ""} ${ in_re_label if in_re_check == True else ""}
+      - "trial_court_county": ${ trial_court.address.county.upper() }
+      - "case_number__1": ${ case_number }
+      - "case_number__2": ${ case_number }
+      - "plaintiffs": ${ users.full_names() if party_label == "plaintiff" or party_label == "petitioner" else other_parties.full_names()}
+      - "defendants": ${list_defendants(users.full_names(), other_parties.full_names(), anyone_opposing, party_label)}
+
+      - "form_to_be_delivered": ${ form_name }
+
+      - "delivery_party1_name_full": | 
+          % if delivery_parties[6].is_represented:
+          ${ delivery_parties[6].lawyer.name.full(middle="full") }, (lawyer for ${ delivery_parties[6].name.full(middle="full") })
+          % else:
+          ${ delivery_parties[6].name.full(middle="full") }
+          % endif
+      - "delivery_party1_mail_address_on_one_line": ${ delivery_parties[6].address.on_one_line(bare=True) }
+      - "delivery_party1_email": ${ delivery_parties[6].delivery_email if delivery_parties[6].knows_delivery_method else '' }
+      - "is_delivery_party1_hand_yes": ${ delivery_parties[6].hand_delivery if delivery_parties[6].knows_delivery_method else '' }
+      - "is_delivery_party1_mail_yes": ${ delivery_parties[6].mail_delivery if delivery_parties[6].knows_delivery_method else '' }
+      - "is_delivery_party1_efm_yes": ${ delivery_parties[6].efm_delivery if delivery_parties[6].knows_delivery_method else '' }
+      - "is_delivery_party1_email_yes": ${ delivery_parties[6].email_delivery if delivery_parties[6].knows_delivery_method else '' }
+      - "delivery_party1_date": ${ delivery_parties[6].delivery_date if delivery_parties[6].knows_delivery_method else '' }
+      - "delivery_party1_time": ${ format_time(delivery_parties[6].delivery_time, format='h:mm') if delivery_parties[6].knows_delivery_method else '' }
+      - "is_delivery_party1_am_yes": ${ True if format_time(delivery_parties[6].delivery_time, format='a')=='AM' else '' }
+      - "is_delivery_party1_am_no": ${ True if format_time(delivery_parties[6].delivery_time, format='a')=='PM' else '' }
+      
+      - "delivery_party2_name_full": | 
+          % if delivery_parties[7].is_represented:
+          ${ delivery_parties[7].lawyer.name.full(middle="full") }, (lawyer for ${ delivery_parties[7].name.full(middle="full") })
+          % else:
+          ${ delivery_parties[7].name.full(middle="full") }
+          % endif
+      - "delivery_party2_mail_address_on_one_line": ${ delivery_parties[7].address.on_one_line(bare=True) }
+      - "delivery_party2_email": ${ delivery_parties[7].delivery_email if delivery_parties[7].knows_delivery_method else '' }
+      - "is_delivery_party2_hand_yes": ${ delivery_parties[7].hand_delivery if delivery_parties[7].knows_delivery_method else '' }
+      - "is_delivery_party2_mail_yes": ${ delivery_parties[7].mail_delivery if delivery_parties[7].knows_delivery_method else '' }
+      - "is_delivery_party2_efm_yes": ${ delivery_parties[7].efm_delivery if delivery_parties[7].knows_delivery_method else '' }
+      - "is_delivery_party2_email_yes": ${ delivery_parties[7].email_delivery if delivery_parties[7].knows_delivery_method else '' }
+      - "delivery_party2_date": ${ delivery_parties[7].delivery_date if delivery_parties[7].knows_delivery_method else '' }
+      - "delivery_party2_time": ${ format_time(delivery_parties[7].delivery_time, format='h:mm') if delivery_parties[7].knows_delivery_method else '' }
+      - "is_delivery_party2_am_yes": ${ True if format_time(delivery_parties[7].delivery_time, format='a')=='AM' else '' }
+      - "is_delivery_party2_am_no": ${ True if format_time(delivery_parties[7].delivery_time, format='a')=='PM' else '' }
+      
+      - "user": ${ users[0].name.full(middle="full") }
+      - "user_mail_address_line_one": ${ users[0].address.line_one(bare=True) }
+      - "user_mail_address_city_state_zip": ${ users[0].address.line_two() }
+      - "user_phone_number": ${ phone_number_formatted(users[0].phone_number) }
+      - "user_email": ${ users[0].email if users[0].email_notice else '' }
+      - "e_sign_name": ${ users[0].name.full(middle="full") if e_signature else '' }
+---
+attachment:
+  variable name: motion_additional_delivery_blank[i]
+  name: motion_additional_delivery_blank
+  filename: motion-additional-delivery-blank
+  skip undefined: True
+  editable: True
+  pdf template file: motion_additional_proof_delivery.pdf
+  fields:
+      - "trial_court_county": ${ "" }
+---
+############### Review page
+id: review screen
+event: review_answers
+question: |
+  Review screen
+subquestion: |
+  Edit your answers below.
+review: 
+  - Edit: user_ask_role
+    button: |
+      % if user_ask_role == "plaintiff":
+        **Your role:** plaintiff or petitioner
+      % else:
+        **Your role:** defendant or respondent
+      % endif
+  - Edit: users.revisit
+    button: |
+      **Your party: (Edit to change name, lawyer, address, and delivery info)**
+
+      % for my_var in users:
+        * ${ my_var.name.full(middle="full") }
+      % endfor
+  - Edit: other_parties.revisit
+    button: |
+      **The other party: (Edit to change name, lawyer, address, and delivery info)**
+
+      % for my_var in other_parties:
+        * ${ my_var.name.full(middle="full") }
+      % endfor
+  - Edit: in_re_check
+    button: |
+      **Does the court case have "In re:" in the name?**  
+      ${word(yesno(in_re_check))}
+  - Edit: in_re_label
+    button: |
+      **In re:** ${in_re_label}
+    show if: in_re_check
+  - Edit: 
+      - trial_court_index
+      - recompute:
+        - trial_court
+    button: |
+      **County where this case is filed:**
+      ${ trial_court.address.county }
+  - Edit: case_number
+    button: |
+      **Case number:**
+      ${ case_number }   
+  - Edit: motion_summary
+    button: |
+      **Motion summary:**
+      ${ motion_summary }
+  - Edit: motion_body
+    button: |
+      **Motion text:**
+      ${ motion_body }
+  - Edit: e_signature
+    button: |
+      **Do you want to add your e-signature to your forms?**
+      ${ word(yesno(e_signature)) }
+  - Edit: users[0].address.address
+    button: |
+      **Your address:**
+      ${ users[0].address.on_one_line(bare=True) }
+  - Edit: users[0].phone_number
+    button: |
+      **Your phone number:**
+      ${ phone_number_formatted(users[0].phone_number) }
+  - Edit: users[0].email_notice
+    button: |
+      **Do you have an email address?**
+      ${ word(yesno(users[0].email_notice)) }
+  - Edit: users[0].email
+    button: |
+      **Your email:**
+      ${ users[0].email }
+    show if: users[0].email_notice
+---
+#needs: yes_no_unknown
+id: delivery party review
+continue button field: x.review_delivery
+generic object: ALIndividual
+question: |
+  Edit ${ x.name.full(middle="full") }'s information
+subquestion: |  
+  % if x == users[0]:
+  Edit your address, phone number, and email address in the [**About you**](${ url_action('section_about_you') }) section.
+  % else:
+  If you don't see lawyer, address, or delivery information, then it might not be entered yet. Continue the program to answer all the questions.
+  % endif
+review: 
+  - Edit: x.name.first
+    button: |
+      **Party name:**
+      ${ x.name.full(middle="full")  }
+  - Edit: x.is_represented
+    button: |
+      **Does ${ x.name.full(middle="full") } have a lawyer?**
+      % if x.is_represented is None:
+      I don't know
+      % else:
+      ${ word(yesno(x.is_represented)) }
+      % endif
+  - Edit: x.lawyer.name.first
+    button: |
+      **Lawyer name:**
+      ${ x.lawyer.name.full(middle="full") }
+    show if: x.is_represented
+  - Edit: x.address.address
+    button: |
+      % if x.is_represented == True:
+      **${ x.lawyer.name.full(middle="full") }'s address: **
+      % else:
+      **${ x.name.full(middle="full") }'s address: **
+      % endif
+      ${ x.address.on_one_line(bare=True) }
+  - Edit: x.knows_delivery_method
+    button: |
+      **Do you know how you will deliver your forms to them?**
+      ${ word(yesno(x.knows_delivery_method)) }
+  - Edit: x.hand_delivery
+    button: |
+      **Delivery by: (Edit to view and change details)**
+      
+      % if x.efm_delivery == True:
+        * E-filing system
+      % endif
+      % if x.email_delivery == True:
+        * Email
+      % endif
+      % if x.hand_delivery == True:
+        * Hand
+      % endif
+      % if x.mail_delivery == True:
+        * US mail or delivery company
+      % endif
+    show if: x.knows_delivery_method
+  - Edit: x.delivery_date
+    button: |
+      **Delivery on:**
+      ${ x.delivery_date } at ${ format_time(x.delivery_time, "h:mm a") }
+    show if: x.knows_delivery_method
+---
+id: users review
+continue button field: users.revisit
+question: |
+  Edit the ${ user_ask_role }s
+subquestion: |
+  ${ users.table }
+
+  ${ users.add_action() }
+---
+table: users.table
+rows: users
+columns:
+  - Name: |
+      row_item.name.full(middle="full") if defined("row_item.name.first") else ""
+  - Party, lawyer, address, and delivery info: |
+      action_button_html(url_action(row_item.attr_name("review_delivery")), label="Edit", icon="pencil-alt")
+delete buttons: True
+confirm: True
+---
+id: other parties review
+continue button field: other_parties.revisit
+question: |
+  % if user_ask_role == "plaintiff":
+    Edit the defendants
+  % else:
+    Edit the plaintiffs
+  % endif
+subquestion: |
+  ${ other_parties.table }
+
+  ${ other_parties.add_action() }
+---
+table: other_parties.table
+rows: other_parties
+columns:
+  - Name: |
+      row_item.name.full(middle="full") if defined("row_item.name.first") else ""
+  - Party, lawyer, address, and delivery info: |
+      action_button_html(url_action(row_item.attr_name("review_delivery")), label="Edit", icon="pencil-alt")
+delete buttons: True
+confirm: True
+---
+id: case info review screen
+event: section_case_info
+question: |
+  Case info
+subquestion: |
+  Edit your answers below.
+review: 
+  - Edit: user_ask_role
+    button: |
+      % if user_ask_role == "plaintiff":
+        **Your role:** plaintiff or petitioner
+      % else:
+        **Your role:** defendant or respondent
+      % endif
+  - Edit: users.revisit
+    button: |
+      **Your party: (Edit to change name, lawyer, address, and delivery info)**
+
+      % for my_var in users:
+        * ${ my_var.name.full(middle="full") }
+      % endfor
+  - Edit: other_parties.revisit
+    button: |
+      **The other party: (Edit to change name, lawyer, address, and delivery info)**
+
+      % for my_var in other_parties:
+        * ${ my_var.name.full(middle="full") }
+      % endfor
+  - Edit: in_re_check
+    button: |
+      **Does the court case have "In re:" in the name?**  
+      ${word(yesno(in_re_check))}
+  - Edit: in_re_label
+    button: |
+      **In re:** ${in_re_label}
+    show if: in_re_check
+  - Edit: 
+      - trial_court_index
+      - recompute:
+        - trial_court
+    button: |
+      **County where this case is filed:**
+      ${ trial_court.address.county }
+  - Edit: case_number
+    button: |
+      **Case number:**
+      ${ case_number }   
+---
+id: motion review screen
+event: section_motion
+question: |
+  Motion details
+subquestion: |
+  Edit your answers below.
+review:
+  - Edit: motion_summary
+    button: |
+      **Motion summary:**
+      ${ motion_summary }
+  - Edit: motion_body
+    button: |
+      **Motion text:**
+      ${ motion_body }
+---
+id: delivery info review screen
+event: section_delivery
+question: |
+  Notice and delivery details
+subquestion: |
+  Edit your answers below.
+review:
+  - Edit: users.revisit
+    button: |
+      **Your party: (Edit to change name, lawyer, address, and delivery info)**
+
+      % for my_var in users:
+        * ${ my_var.name.full(middle="full") }
+      % endfor
+  - Edit: other_parties.revisit
+    button: |
+      **The other party: (Edit to change name, lawyer, address, and delivery info)**
+
+      % for my_var in other_parties:
+        * ${ my_var.name.full(middle="full") }
+      % endfor
+  - Edit: e_signature
+    button: |
+      **Do you want to add your e-signature to your forms?**
+      ${ word(yesno(e_signature)) }
+
+---
+id: about you review screen
+event: section_about_you
+question: |
+  About you
+subquestion: |
+  Edit your answers below.
+review:
+  - Edit: users[0].name.first
+    button: |
+      **Your name:**
+      ${ users[0].name.full(middle="full") }
+  - Edit: users[0].address.address
+    button: |
+      **Your address:**
+      ${ users[0].address.on_one_line(bare=True) }
+  - Edit: users[0].phone_number
+    button: |
+      **Your phone number:**
+      ${ phone_number_formatted(users[0].phone_number) }
+  - Edit: users[0].email_notice
+    button: |
+      **Do you have an email address?**
+      ${ word(yesno(users[0].email_notice)) }
+  - Edit: users[0].email
+    button: |
+      **Your email:**
+      ${ users[0].email }
+    show if: users[0].email_notice
