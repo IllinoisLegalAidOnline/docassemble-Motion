@@ -861,7 +861,7 @@ objects:
   - motion_single_pdf_bundle: ALDocumentBundle.using(elements=[motion_attachment, motion_additional_delivery, motion_additional_delivery_2, motion_additional_delivery_3], filename="motion.pdf", title="Motion", enabled=True)
 ---
 code: |
-  motion_attachment.overflow_fields['motion_body'].overflow_trigger = 640
+  motion_attachment.overflow_fields['motion_body'].overflow_trigger = 1280
   motion_attachment.overflow_fields.gathered = True  
 ---
 attachment:
@@ -884,9 +884,6 @@ attachment:
   fields:
       - "in_re": ${ "In re:" if in_re_check == True else ""} ${ in_re_label if in_re_check == True else ""}
       - "trial_court_county": ${ trial_court.address.county.upper() }
-      #- "plaintiffs": ${ users.full_names() if user_ask_role == 'plaintiff' else other_parties.full_names() }
-      #- "defendants": ${ other_parties.full_names() if user_ask_role == 'plaintiff' else users.full_names() }
-
       - "plaintiffs": ${ users.full_names() if party_label == "plaintiff" or party_label == "petitioner" else other_parties.full_names()}
       - "defendants": ${list_defendants(users.full_names(), other_parties.full_names(), anyone_opposing, party_label)}
 
