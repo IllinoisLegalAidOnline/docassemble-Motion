@@ -79,7 +79,23 @@ code: |
     if motion_additional_page:
       additional_motion_body
       preview_additional_motion
-      
+  elif motion_type == "Reschedule a court date":
+    reschedule_date
+    court_date_reason
+    if continue_reason_type == "Other":
+      continue_reason
+    elif continue_reason_type == "Witness unavailable":
+      witness_placeholder
+    else:
+      evidence_placeholder
+    preview_continue_or_extend
+  else:
+    unfinished_task
+    current_deadline
+    new_deadline
+    extension_reason
+    preview_continue_or_extend
+    
   e_signature
 
   set_progress(50)
@@ -533,9 +549,9 @@ subquestion: |
   **Note: this is not a complete form.** Finish the program to get all your forms.
 ---
 id: add additional motion page
-question:
+question: |
   Do you want to add a second page to your motion?
-subquestion:
+subquestion: |
   You will be able to preview the Motion during the program and at the end.
 fields:
   - no label: motion_additional_page
@@ -547,7 +563,7 @@ question: |
 subquestion: |
   Enter the second page of your motion.
   
-  The additioanl motion page has room for about 36 lines of text. You can preview it on the next screen.
+  The additional motion page has room for about 36 lines of text. You can preview it on the next screen.
 fields:
   - Motion: additional_motion_body
     input type: area
@@ -573,6 +589,130 @@ subquestion: |
   ${ pdf_concatenate(motion_attachment['preview'], additional_motion_attachment['preview'], filename="motion-preview.pdf") }
 
   **Note: this is not a complete form.** Finish the program to get all your forms.
+---
+id: original court date
+question: |
+  When is the court date you want to reschedule?
+fields:
+  - Date: reschedule_date
+    datatype: date
+    min: ${ today().format("yyyy-MM-dd") }
+  - Time: reschedule_time
+    datatype: time
+---
+id: original court date reason
+question: |
+  Why is there a court date on ${ reschedule_date }?
+subquestion: |
+  Your court papers should tell you what is going to happen in court on that date.
+fields: 
+  - no label: court_date_reason
+    datatype: radio
+    choices:
+      - The judge will hear a motion.: Motion
+      - We will have a trial.: Trial
+      - We will give the judge a status update.: Status
+      - Something else or I'm not sure why there is a court date.: Something else
+---
+id: continuance reason type
+question: |
+  Why do you need to reschedule the ${ reschedule_date } court date?
+fields: 
+  - no label: continue_reason_type
+    datatype: radio
+    choices:
+      - A witness won't be available on that date.: Witness unavailable
+      - Evidence won't be available on that date.: Evidence unavailable
+      - I need to reschedule for another reason.: Other
+---
+id: continuance reason
+question: |
+  Why do you need to reschedule?
+subquestion: |
+  The motion to continue has room for about 15 lines of text. You can preview it on the next screen.
+fields:
+  - I need to reschedule because:: continue_reason
+    input type: area
+    rows: 10
+---
+id: witness placeholder
+continue button field: witness_placeholder
+question: |
+  Witness placeholder
+---
+id: evidence placeholder
+continue button field: evidence_placeholder
+question: |
+  Evidence placeholder
+
+
+
+---  
+id: unfinished task
+question: |
+  What do you need more time to do?
+subquestion: |
+  In a few words, explain what you need more time to do. On the next screens, you can explain:
+  
+  * The current deadline,
+  * The new deadline you want, and
+  * Why you need more time.
+fields:
+  - I need more time to:: unfinished_task
+    maxlength: 60
+---
+id: current deadline
+question: |
+  What is the **current** deadline?
+fields:
+  - Current deadline: current_deadline
+    datatype: date
+    min: ${ today().format("yyyy-MM-dd") }
+---
+id: new deadline
+question: |
+  What is the **new** deadline you want?
+fields:
+  - New deadline: new_deadline
+    datatype: date
+    min: ${ current_deadline.format("yyyy-MM-dd") }
+---  
+id: extend time reason
+question: |
+  Why do you need until ${ new_deadline }?
+subquestion: |
+  Explain how the new deadline will let you "${ unfinished_task }" by ${ new_deadline }.
+
+  The motion to extend time has room for about 5 lines of text. You can preview it on the next screen.
+fields:
+  - I need more time because: extension_reason
+    input type: area
+    rows: 5
+    maxlength: 350
+---
+id: preview motion to continue or extend
+continue button field: preview_continue_or_extend
+reconsider:
+  - motion_continue_attachment['preview']
+question: |
+  Motion to Continue or Extend Time preview
+subquestion: |
+  Click the below image to preview your Motion to Continue or Extend Time.
+  
+  If this looks good, click **Next**.
+  
+  If you want to edit, click **Back**. OR SECTION
+  
+  If you want to add another page, you can enter more text.
+  
+  **Note: this is not a complete form.** Finish the program to get all your forms.
+ 
+  ${ pdf_concatenate(motion_continue_attachment['preview'], filename="motion-continue-preview.pdf") }
+
+  **Note: this is not a complete form.** Finish the program to get all your forms.
+
+
+
 
 ---
 id: phone number
@@ -1230,7 +1370,25 @@ attachment:
       - "is_email_notice_yes": ${ users[0].email_notice }
       - "motion_by_plaintiff": ${ party_label == "plaintiff" or party_label == "petitioner" }
       - "motion_by_defendant": ${ party_label == "defendant" or party_label == "respondent" }
-      
+
+      - "continue_cb": ${ motion_type == "Reschedule a court date"}
+      - "court_date_reason_motion": ${ court_date_reason == "Motion" if motion_type == "Reschedule a court date" else ''}
+      - "court_date_reason_trial": ${ court_date_reason == "Trial" if motion_type == "Reschedule a court date" else ''}
+      - "court_date_reason_status": ${ court_date_reason == "Status" if motion_type == "Reschedule a court date" else ''}
+      - "court_date_reason_other": ${ court_date_reason == "Something else" if motion_type == "Reschedule a court date" else ''}
+      - "court_date_original": ${ reschedule_date  if motion_type == "Reschedule a court date" else ''}
+      - "court_time_original": ${ format_time(reschedule_time, format='h:mm')  if motion_type == "Reschedule a court date" else ''}
+      - "court_time_original_am": ${ (True if format_time(reschedule_time, format='a')=='AM' else '') if motion_type == "Reschedule a court date" else '' }
+      - "court_time_orginal_pm": ${ (True if format_time(reschedule_time, format='a')=='PM' else '') if motion_type == "Reschedule a court date" else '' }
+      - "continue_reason": ${ continue_reason if motion_type == "Reschedule a court date" else ''}
+
+      - "extend_cb": ${ motion_type == "Extend a deadline"}
+      - "extend_task": ${ unfinished_task if motion_type == "Extend a deadline" else '' }
+      - "extend_current_deadline": ${ current_deadline if motion_type == "Extend a deadline" else '' }
+      - "extend_new_deadline": ${ new_deadline if motion_type == "Extend a deadline" else '' }
+      - "extend_reason_next_page": ${ 'See explanation on next page.' if motion_type == "Extend a deadline" else '' }
+      - "extend_reason": ${ "I need more time because " + extension_reason if motion_type == "Extend a deadline" else '' }
+
       - "delivery_party1_name_full": | 
           % if delivery_parties[0].is_represented:
           ${ delivery_parties[0].lawyer.name.full(middle="full") }, (lawyer for ${ delivery_parties[0].name.full(middle="full") })
