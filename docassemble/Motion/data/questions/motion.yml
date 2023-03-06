@@ -16,6 +16,7 @@ objects:
   - users[i].lawyer: ALIndividual
   - other_parties: ALPeopleList.using(there_are_any=True)
   - other_parties[i].lawyer: ALIndividual
+  - witness: ALIndividual
   - delivery_parties: ALPeopleList.using(there_are_any=True)
   - delivery_parties[i].lawyer: ALIndividual
   - court_list: ALCourtLoader.using(file_name='docassemble.ILAO:data/sources/il_courts.xlsx')
@@ -85,9 +86,21 @@ code: |
     if continue_reason_type == "Other":
       continue_reason
     elif continue_reason_type == "Witness unavailable":
-      witness_placeholder
+      witness.name.first
+      if know_witness_address:
+        witness.address.address
+      if used_due_diligence:
+        due_diligence_effort
+      witness_testimony
+      available_date
+      continue_reason_string_built
     else:
-      evidence_placeholder
+      evidence_description
+      if used_due_diligence:
+        due_diligence_effort
+      evidence_shows
+      available_date
+      continue_reason_string_built
     preview_continue_or_extend
   else:
     unfinished_task
@@ -324,7 +337,7 @@ template: long_name_help
 subject: |
   **What if the person's name doesn't fit into 4 fields?**
 content: |
-  If the party has a long name like "Jane Smith, Director of Housing," select **Business or organization**. You can then enter the full name and title.
+  If the person has a long name like "Jane Smith, Director of Housing," select **Business or organization**. You can then enter the full name and title.
 ---
 code: |
   if party_label == 'plaintiff':
@@ -490,7 +503,7 @@ fields:
         help: |
           Examples include:
     
-          * You will need to miss a court date for a family medical emergency,
+          * You will need to miss a court date due to a family medical emergency,
           * You need more time to find a witness that you need for your case, or
           * The evidence you need for your case won't be available on the scheduled court date.      
       - I need to extend the deadline to do something.: Extend a deadline  
@@ -621,8 +634,10 @@ fields:
   - no label: continue_reason_type
     datatype: radio
     choices:
-      - A witness won't be available on that date.: Witness unavailable
-      - Evidence won't be available on that date.: Evidence unavailable
+      - My witness won't be available on that date.: Witness unavailable
+        help: |
+          Select this if you have not found the witness or if they are not available on ${ reschedule_date }. 
+      - My evidence won't be available on that date.: Evidence unavailable
       - I need to reschedule for another reason.: Other
 ---
 id: continuance reason
@@ -634,19 +649,198 @@ fields:
   - I need to reschedule because:: continue_reason
     input type: area
     rows: 10
+
 ---
-id: witness placeholder
-continue button field: witness_placeholder
+sets:
+  - witness.name.first
+id: witness name
 question: |
-  Witness placeholder
+  What is the name of the witness?
+subquestion: |
+  ${ collapse_template(long_name_help) }
+fields:
+  - code: |
+      witness.name_fields(person_or_business='unsure')
 ---
-id: evidence placeholder
-continue button field: evidence_placeholder
+id: know witness address
 question: |
-  Evidence placeholder
+  Do you know ${ witness.name.full(middle="full") }'s address?
+fields:
+  - no label: know_witness_address
+    datatype: yesnoradio  
+---
+id: witness address
+question: |
+  What is ${ witness.name.full(middle="full") }'s address?
+fields:
+  - Street address: witness.address.address
+    address autocomplete: True
+  - Address line 2: witness.address.unit
+    required: False
+  - City: witness.address.city
+  - State: witness.address.state
+    code: |
+      states_list()
+    default: IL      
+  - ZIP code: witness.address.zip  
+---
+id: use due diligence
+question: |
+  % if continue_reason_type == "Witness unavailable":
+    % if know_witness_address:
+    Did you use due diligence to get ${ witness.name.full(middle="full") } to testify on ${ reschedule_date }?
+    % else:
+    Did you use due diligence to find ${ witness.name.full(middle="full") }'s address?
+    % endif
+  % else:
+    Did you use due diligence to get the evidence to court on ${ reschedule_date }?
+  % endif
+subquestion: |
+  % if continue_reason_type == "Witness unavailable":
+    % if know_witness_address:
+    Using 'due diligence' means doing what is expected or reasonable to get ${ witness.name.full(middle="full") } to testify on ${ reschedule_date }.
+    % else:
+    Using 'due diligence' means doing what is expected or reasonable to find ${ witness.name.full(middle="full") }'s address.
+    % endif
+  % else:
+    Using 'due diligence' means doing what is expected or reasonable to get the evidence (${ evidence_description }) to court on ${ reschedule_date }.
+  % endif
+fields:
+  - no label: used_due_diligence
+    datatype: yesnoradio  
+---
+id: due diligence explanation
+question: |
+  % if continue_reason_type == "Witness unavailable":
+    % if know_witness_address:
+    How did you try to get ${ witness.name.full(middle="full") } to testify on ${ reschedule_date }?
+    % else:
+    What did you to to find ${ witness.name.full(middle="full") }'s address?
+    % endif
+  % else:
+    How did you try to get the evidence to court on ${ reschedule_date }?
+  % endif
+subquestion: |
+  % if continue_reason_type == "Witness unavailable":
+    % if know_witness_address:
+    Describe how you tried to get ${ witness.name.full(middle="full") } to testify on ${ reschedule_date }.
+    % else:
+    Describe how you tried to get ${ witness.name.full(middle="full") }'s address.
+    % endif
+  % else:
+    Describe how you tried to get the evidence (${ evidence_description }) to court on ${ reschedule_date }.
+  % endif
+fields:
+  - Efforts: due_diligence_effort
+    input type: area
+    rows: 3
+    maxlength: 150
+
+---
+id: reschedule date
+question: |
+  % if continue_reason_type == "Witness unavailable":
+  When will ${ witness.name.full(middle="full") } be available to testify?
+  % else:
+  When will you be able to bring the evidence to court?
+  % endif
+subquestion: |
+  % if continue_reason_type == "Witness unavailable":
+  Enter a date when ${ witness.name.full(middle="full") } will be available.
+  % else:
+  Enter a date when the evidence (${ evidence_description }) will be available.
+  % endif
+fields:
+  - Date witness available: available_date
+    datatype: date
+    min: ${ reschedule_date.format("yyyy-MM-dd") }
+    show if: 
+      code: |
+        continue_reason_type == "Witness unavailable"
+  - Date evidence available: available_date
+    datatype: date
+    min: ${ reschedule_date.format("yyyy-MM-dd") }
+    show if:
+      code: |
+        continue_reason_type == "Evidence unavailable"
 
 
+---
+id: testimony summary
+question: |
+  % if continue_reason_type == "Witness unavailable":
+  What will ${ witness.name.full(middle="full") } say in court?
+  % else:
+  What will the evidence (${ evidence_description }) show?
+  % endif
+subquestion: |
+  % if continue_reason_type == "Witness unavailable":
+  Explain the facts that ${ witness.name.full(middle="full") }'s testimony will show.
+  % else:
+  Explain the facts that the evidence will show.
+  % endif
+fields:
+  - What testimony will show: witness_testimony
+    input type: area
+    rows: 3
+    maxlength: 150
+    show if:
+      code: |
+        continue_reason_type == "Witness unavailable"
+  - What evidence will show: evidence_shows
+    input type: area
+    rows: 3
+    maxlength: 150
+    show if:
+      code: |
+        continue_reason_type == "Evidence unavailable"
+---
+id: evidence description
+question: |
+  What is the evidence you need for court?
+subquestion: |
+  Give a short description of the evidence. Try to be specific. For example, you can say:
+  
+  * a contract with a company,
+  * cell phone records, or
+  * a letter to someone.
+  
+  You can explain what the evidence will show on another screen.
+fields:
+  - The evidence is:: evidence_description
+    maxlength: 60
+---
+# maybe remove these depends on vars since reconsider is set to true at bottom of code block
+depends on:
+  - continue_reason_type
+  - witness.name
+  - know_witness_address
+  - used_due_diligence
+  - due_diligence_effort
+  - avaialable_date
+  - witness_testimony
+sets:
+  - continue_reason
+  - continue_reason_string_built
+code: |
+  if continue_reason_type == "Witness unavailable":
+    temp_continue_reason = "1. The evidence is witness testimony from " + str(witness.name.full(middle='full')) + ".\n"
+  
+    if know_witness_address:
+      temp_continue_reason += "2. I have used due diligence to get " + str(witness.name.full(middle='full')) + " to testify on " + reschedule_date + ". Specifically, I have: " + due_diligence_effort.rstrip('.') + ".\n3. The evidence will show the following: " + witness_testimony.rstrip('.') + ".\n4. The witness, " + str(witness.name.full(middle='full')) + ", resides at " + str(witness.address.on_one_line(bare=True)) + ".\n5. "
+    else:
+      temp_continue_reason += "2. The witness's address is unknown. I have used due diligence to find where " + str(witness.name.full(middle='full')) + " lives. Specifically, I have done the following: " + due_diligence_effort.rstrip('.') + ".\n3. The evidence will show the following: " + witness_testimony.rstrip('.') + ".\n4. "
 
+    temp_continue_reason += "If I am given more time, I can get the witness by " + available_date + "."
+    
+  else:
+    temp_continue_reason = "1. The evidence is: " + evidence_description.rstrip('.') + ".\n"
+    temp_continue_reason += "2. I have used due diligence to get " + evidence_description.rstrip('.') + " to court on " + reschedule_date + ". Specifically, I have: " + due_diligence_effort.rstrip('.') + ".\n3. The evidence will show the following: " + evidence_shows.rstrip('.')
+    temp_continue_reason += ".\n4. If I am given more time, I can get " + evidence_description.rstrip('.') + " by " + available_date + "."
+
+  continue_reason = "Evidence material to my case is not available on " + reschedule_date + ". Therefore, I ask the court for more time to get it.\n" + str(temp_continue_reason)
+  continue_reason_string_built = True
+reconsider: True
 ---  
 id: unfinished task
 question: |
@@ -976,12 +1170,15 @@ subject: |
 content: |  
   You can deliver the forms by:
   
-  * The court's e-filing system,
+  * The court's **{e-filing system}**,
   * Email,
-  * US mail or delivery company (like UPS or FedEx), or
+  * US mail or a delivery company (like UPS or FedEx), or
   * Hand delivery.
 
   You may use US mail, a delivery company, or hand delivery if you or the other party **does not** have an email address.
+terms:
+  - e-filing system: |
+      The court's e-filing system could be an electronic filing manager (EFM) or an approved electronic filing service provider (EFSP).
 ---
 id: user party delivery method
 #changed from generic object to users to allow for changing answers via Back
@@ -993,6 +1190,8 @@ question: |
   How will you send your ${ form_name } to ${ users[i].name.full(middle="full") }?
   % endif
 subquestion: |  
+  **Note:** If you do not know this now, be sure to add it to the Proof of Delivery section of your forms later.
+
   You may use US mail, a delivery company, or hand delivery if you or the other party **does not** have an email address.
   
   ${ collapse_template(efiling_help) }  
@@ -1030,6 +1229,8 @@ question: |
   How will you send your ${ form_name } to ${ other_parties[i].name.full(middle="full") }?
   % endif
 subquestion: |  
+  **Note:** If you do not know this now, be sure to add it to the Proof of Delivery section of your forms later.
+
   You may use US mail, a delivery company, or hand delivery if you or the other party **does not** have an email address.
   
   ${ collapse_template(efiling_help) }  
@@ -1059,30 +1260,41 @@ question: |
   % else:
   When will you send your ${ form_name } to ${ x.name.full(middle="full") }?
   % endif
+subquestion: |
+  **Note:** If you do not know this now, be sure to add it to the Proof of Delivery section of your forms later.
 fields:
   - Date: x.delivery_date
     datatype: date
-    default: ${ today().format("yyyy-MM-dd") }
+    required: False
     min: ${ today().format("yyyy-MM-dd") }
     max: ${ today().plus(years=1) }
   - Time: x.delivery_time
     datatype: time
+    required: False
+validation code: |
+  if (not showifdef('x.delivery_date')):
+    x.knows_delivery_date = False
+  else:
+    x.knows_delivery_date = True
+  if (not showifdef('x.delivery_time')):
+    x.knows_delivery_time = False
+  else:
+    x.knows_delivery_time = True
+    
 ---
 id: hand delivery info
 continue button field: hand_delivery_info
-#generic object: ALIndividual
 question: |
-  Complete your Proof of Delivery
+  Check your Proof of Delivery
 subquestion: |
-
-  Make sure you complete the Proof of Delivery section of your forms. 
-  
-  Instructions when delivering your forms by hand:
-
-  * If a party in your case does not have a lawyer, you can hand-deliver to them or to a family member who is 13 or older at their home.
-  * If they do have a lawyer, you can hand-deliver to the lawyer or to the lawyer's office.
+  **Don't forget!** Make sure you review and complete the Proof of Delivery section of your forms. 
   
   [FILE proof_of_delivery_snip.png, 100%, Proof of Delivery section of forms]
+
+  **Instructions when delivering your forms by hand:**
+
+  * If a party in your case does not have a lawyer, you can hand-deliver the forms to them or to a family member who is 13 or older at their home.
+  * If they do have a lawyer, you can hand-deliver the forms to the lawyer or to the lawyer's office.
 
 ---
 id: get docs screen
@@ -1140,14 +1352,6 @@ objects:
   - motion_continue_attachment: ALDocument.using(title="Motion to Continue or Extend Time", filename="motion.pdf", has_addendum=False)
   - motion_continue_order: ALDocument.using(title="Order", filename="order.pdf", has_addendum=False)
   
-#  
-#  
-#  - illinois_appearance_attachment: ALDocument.using(title="Appearance", filename="appearance.pdf", has_addendum=False)
-#  - illinois_appearance_instructions: ALDocument.using(title="Instructions", filename="instructions.pdf", has_addendum=False)
-#  - illinois_appearance_additional: ALDocument.using(title="Additional Proof of Delivery", filename="appearance_additional_proof_delivery.pdf", has_addendum=False)
-#  - illinois_appearance_additional_2: ALDocument.using(title="Additional Proof of Delivery 2", filename="appearance_additional_proof_delivery_2.pdf", has_addendum=False)
-#  - illinois_appearance_additional_3: ALDocument.using(title="Additional Proof of Delivery 3", filename="appearance_additional_proof_delivery_3.pdf", has_addendum=False)
-#  - illinois_appearance_additional_blank: ALDocument.using(title="Additional Proof of Delivery (blank)", filename="appearance_additional_proof_delivery_blank.pdf", has_addendum=False)
 ---
 code: |
   motion_attachment.enabled = False
@@ -1280,10 +1484,10 @@ attachment:
       - "is_delivery_party1_mail_yes": ${ delivery_parties[0].mail_delivery if delivery_parties[0].knows_delivery_method else '' }
       - "is_delivery_party1_efm_yes": ${ delivery_parties[0].efm_delivery if delivery_parties[0].knows_delivery_method else '' }
       - "is_delivery_party1_email_yes": ${ delivery_parties[0].email_delivery if delivery_parties[0].knows_delivery_method else '' }
-      - "delivery_party1_date": ${ delivery_parties[0].delivery_date if delivery_parties[0].knows_delivery_method else '' }
-      - "delivery_party1_time": ${ format_time(delivery_parties[0].delivery_time, format='h:mm') if delivery_parties[0].knows_delivery_method else '' }
-      - "is_delivery_party1_am_yes": ${ True if format_time(delivery_parties[0].delivery_time, format='a')=='AM' else '' }
-      - "is_delivery_party1_am_no": ${ True if format_time(delivery_parties[0].delivery_time, format='a')=='PM' else '' }
+      - "delivery_party1_date": ${ delivery_parties[0].delivery_date if delivery_parties[0].knows_delivery_method and delivery_parties[0].knows_delivery_date else '' }
+      - "delivery_party1_time": ${ format_time(delivery_parties[0].delivery_time, format='h:mm') if delivery_parties[0].knows_delivery_method and delivery_parties[0].knows_delivery_time else '' }
+      - "is_delivery_party1_am_yes": ${ True if delivery_parties[0].knows_delivery_method and format_time(delivery_parties[0].delivery_time, format='a')=='AM' else '' }
+      - "is_delivery_party1_am_no": ${ True if delivery_parties[0].knows_delivery_method and format_time(delivery_parties[0].delivery_time, format='a')=='PM' else '' }
 
       - "delivery_party2_name_full": | 
           % if delivery_parties[1].is_represented:
@@ -1297,10 +1501,10 @@ attachment:
       - "is_delivery_party2_mail_yes": ${ delivery_parties[1].mail_delivery if delivery_parties[1].knows_delivery_method else '' }
       - "is_delivery_party2_efm_yes": ${ delivery_parties[1].efm_delivery if delivery_parties[1].knows_delivery_method else '' }
       - "is_delivery_party2_email_yes": ${ delivery_parties[1].email_delivery if delivery_parties[1].knows_delivery_method else '' }
-      - "delivery_party2_date": ${ delivery_parties[1].delivery_date if delivery_parties[1].knows_delivery_method else '' }
-      - "delivery_party2_time": ${ format_time(delivery_parties[1].delivery_time, format='h:mm') if delivery_parties[1].knows_delivery_method else '' }
-      - "is_delivery_party2_am_yes": ${ True if format_time(delivery_parties[1].delivery_time, format='a')=='AM' else '' }
-      - "is_delivery_party2_am_no": ${ True if format_time(delivery_parties[1].delivery_time, format='a')=='PM' else '' }
+      - "delivery_party2_date": ${ delivery_parties[1].delivery_date if delivery_parties[1].knows_delivery_method and delivery_parties[1].knows_delivery_date else '' }
+      - "delivery_party2_time": ${ format_time(delivery_parties[1].delivery_time, format='h:mm') if delivery_parties[1].knows_delivery_method and delivery_parties[1].knows_delivery_time else '' }
+      - "is_delivery_party2_am_yes": ${ True if delivery_parties[1].knows_delivery_method and format_time(delivery_parties[1].delivery_time, format='a')=='AM' else '' }
+      - "is_delivery_party2_am_no": ${ True if delivery_parties[1].knows_delivery_method and format_time(delivery_parties[1].delivery_time, format='a')=='PM' else '' }
 
       - "is_additional_proof_delivery_yes": ${ delivery_parties.number() > 2 }
 ---
@@ -1401,10 +1605,10 @@ attachment:
       - "is_delivery_party1_mail_yes": ${ delivery_parties[0].mail_delivery if delivery_parties[0].knows_delivery_method else '' }
       - "is_delivery_party1_efm_yes": ${ delivery_parties[0].efm_delivery if delivery_parties[0].knows_delivery_method else '' }
       - "is_delivery_party1_email_yes": ${ delivery_parties[0].email_delivery if delivery_parties[0].knows_delivery_method else '' }
-      - "delivery_party1_date": ${ delivery_parties[0].delivery_date if delivery_parties[0].knows_delivery_method else '' }
-      - "delivery_party1_time": ${ format_time(delivery_parties[0].delivery_time, format='h:mm') if delivery_parties[0].knows_delivery_method else '' }
-      - "is_delivery_party1_am_yes": ${ True if format_time(delivery_parties[0].delivery_time, format='a')=='AM' else '' }
-      - "is_delivery_party1_am_no": ${ True if format_time(delivery_parties[0].delivery_time, format='a')=='PM' else '' }
+      - "delivery_party1_date": ${ delivery_parties[0].delivery_date if delivery_parties[0].knows_delivery_method and delivery_parties[0].knows_delivery_date else '' }
+      - "delivery_party1_time": ${ format_time(delivery_parties[0].delivery_time, format='h:mm') if delivery_parties[0].knows_delivery_method and delivery_parties[0].knows_delivery_time else '' }
+      - "is_delivery_party1_am_yes": ${ True if delivery_parties[0].knows_delivery_method and format_time(delivery_parties[0].delivery_time, format='a')=='AM' else '' }
+      - "is_delivery_party1_am_no": ${ True if delivery_parties[0].knows_delivery_method and format_time(delivery_parties[0].delivery_time, format='a')=='PM' else '' }
 
       - "delivery_party2_name_full": | 
           % if delivery_parties[1].is_represented:
@@ -1418,10 +1622,10 @@ attachment:
       - "is_delivery_party2_mail_yes": ${ delivery_parties[1].mail_delivery if delivery_parties[1].knows_delivery_method else '' }
       - "is_delivery_party2_efm_yes": ${ delivery_parties[1].efm_delivery if delivery_parties[1].knows_delivery_method else '' }
       - "is_delivery_party2_email_yes": ${ delivery_parties[1].email_delivery if delivery_parties[1].knows_delivery_method else '' }
-      - "delivery_party2_date": ${ delivery_parties[1].delivery_date if delivery_parties[1].knows_delivery_method else '' }
-      - "delivery_party2_time": ${ format_time(delivery_parties[1].delivery_time, format='h:mm') if delivery_parties[1].knows_delivery_method else '' }
-      - "is_delivery_party2_am_yes": ${ True if format_time(delivery_parties[1].delivery_time, format='a')=='AM' else '' }
-      - "is_delivery_party2_am_no": ${ True if format_time(delivery_parties[1].delivery_time, format='a')=='PM' else '' }
+      - "delivery_party2_date": ${ delivery_parties[1].delivery_date if delivery_parties[1].knows_delivery_method and delivery_parties[1].knows_delivery_date else '' }
+      - "delivery_party2_time": ${ format_time(delivery_parties[1].delivery_time, format='h:mm') if delivery_parties[1].knows_delivery_method and delivery_parties[1].knows_delivery_time else '' }
+      - "is_delivery_party2_am_yes": ${ True if delivery_parties[1].knows_delivery_method and format_time(delivery_parties[1].delivery_time, format='a')=='AM' else '' }
+      - "is_delivery_party2_am_no": ${ True if delivery_parties[1].knows_delivery_method and format_time(delivery_parties[1].delivery_time, format='a')=='PM' else '' }
 
       - "is_additional_proof_delivery_yes": ${ delivery_parties.number() > 2 }
 ---
@@ -1454,10 +1658,10 @@ attachment:
       - "is_delivery_party1_mail_yes": ${ delivery_parties[2].mail_delivery if delivery_parties[2].knows_delivery_method else '' }
       - "is_delivery_party1_efm_yes": ${ delivery_parties[2].efm_delivery if delivery_parties[2].knows_delivery_method else '' }
       - "is_delivery_party1_email_yes": ${ delivery_parties[2].email_delivery if delivery_parties[2].knows_delivery_method else '' }
-      - "delivery_party1_date": ${ delivery_parties[2].delivery_date if delivery_parties[2].knows_delivery_method else '' }
-      - "delivery_party1_time": ${ format_time(delivery_parties[2].delivery_time, format='h:mm') if delivery_parties[2].knows_delivery_method else '' }
-      - "is_delivery_party1_am_yes": ${ True if format_time(delivery_parties[2].delivery_time, format='a')=='AM' else '' }
-      - "is_delivery_party1_am_no": ${ True if format_time(delivery_parties[2].delivery_time, format='a')=='PM' else '' }
+      - "delivery_party1_date": ${ delivery_parties[2].delivery_date if delivery_parties[2].knows_delivery_method and delivery_parties[2].knows_delivery_date else '' }
+      - "delivery_party1_time": ${ format_time(delivery_parties[2].delivery_time, format='h:mm') if delivery_parties[2].knows_delivery_method and delivery_parties[2].knows_delivery_time else '' }
+      - "is_delivery_party1_am_yes": ${ True if delivery_parties[2].knows_delivery_method and format_time(delivery_parties[2].delivery_time, format='a')=='AM' else '' }
+      - "is_delivery_party1_am_no": ${ True if delivery_parties[2].knows_delivery_method and format_time(delivery_parties[2].delivery_time, format='a')=='PM' else '' }
       
       - "delivery_party2_name_full": | 
           % if delivery_parties[3].is_represented:
@@ -1471,10 +1675,10 @@ attachment:
       - "is_delivery_party2_mail_yes": ${ delivery_parties[3].mail_delivery if delivery_parties[3].knows_delivery_method else '' }
       - "is_delivery_party2_efm_yes": ${ delivery_parties[3].efm_delivery if delivery_parties[3].knows_delivery_method else '' }
       - "is_delivery_party2_email_yes": ${ delivery_parties[3].email_delivery if delivery_parties[3].knows_delivery_method else '' }
-      - "delivery_party2_date": ${ delivery_parties[3].delivery_date if delivery_parties[3].knows_delivery_method else '' }
-      - "delivery_party2_time": ${ format_time(delivery_parties[3].delivery_time, format='h:mm') if delivery_parties[3].knows_delivery_method else '' }
-      - "is_delivery_party2_am_yes": ${ True if format_time(delivery_parties[3].delivery_time, format='a')=='AM' else '' }
-      - "is_delivery_party2_am_no": ${ True if format_time(delivery_parties[3].delivery_time, format='a')=='PM' else '' }
+      - "delivery_party2_date": ${ delivery_parties[3].delivery_date if delivery_parties[3].knows_delivery_method and delivery_parties[3].knows_delivery_date else '' }
+      - "delivery_party2_time": ${ format_time(delivery_parties[3].delivery_time, format='h:mm') if delivery_parties[3].knows_delivery_method and delivery_parties[3].knows_delivery_time else '' }
+      - "is_delivery_party2_am_yes": ${ True if delivery_parties[3].knows_delivery_method and format_time(delivery_parties[3].delivery_time, format='a')=='AM' else '' }
+      - "is_delivery_party2_am_no": ${ True if delivery_parties[3].knows_delivery_method and format_time(delivery_parties[3].delivery_time, format='a')=='PM' else '' }
 
       - "user": ${ users[0].name.full(middle="full") }
       - "user_mail_address_line_one": ${ users[0].address.line_one(bare=True) }
@@ -1512,10 +1716,10 @@ attachment:
       - "is_delivery_party1_mail_yes": ${ delivery_parties[4].mail_delivery if delivery_parties[4].knows_delivery_method else '' }
       - "is_delivery_party1_efm_yes": ${ delivery_parties[4].efm_delivery if delivery_parties[4].knows_delivery_method else '' }
       - "is_delivery_party1_email_yes": ${ delivery_parties[4].email_delivery if delivery_parties[4].knows_delivery_method else '' }
-      - "delivery_party1_date": ${ delivery_parties[4].delivery_date if delivery_parties[4].knows_delivery_method else '' }
-      - "delivery_party1_time": ${ format_time(delivery_parties[4].delivery_time, format='h:mm') if delivery_parties[4].knows_delivery_method else '' }
-      - "is_delivery_party1_am_yes": ${ True if format_time(delivery_parties[4].delivery_time, format='a')=='AM' else '' }
-      - "is_delivery_party1_am_no": ${ True if format_time(delivery_parties[4].delivery_time, format='a')=='PM' else '' }
+      - "delivery_party1_date": ${ delivery_parties[4].delivery_date if delivery_parties[4].knows_delivery_method and delivery_parties[4].knows_delivery_date else '' }
+      - "delivery_party1_time": ${ format_time(delivery_parties[4].delivery_time, format='h:mm') if delivery_parties[4].knows_delivery_method and delivery_parties[4].knows_delivery_time else '' }
+      - "is_delivery_party1_am_yes": ${ True if delivery_parties[4].knows_delivery_method and format_time(delivery_parties[4].delivery_time, format='a')=='AM' else '' }
+      - "is_delivery_party1_am_no": ${ True if delivery_parties[4].knows_delivery_method and format_time(delivery_parties[4].delivery_time, format='a')=='PM' else '' }
       
       - "delivery_party2_name_full": | 
           % if delivery_parties[5].is_represented:
@@ -1529,10 +1733,10 @@ attachment:
       - "is_delivery_party2_mail_yes": ${ delivery_parties[5].mail_delivery if delivery_parties[5].knows_delivery_method else '' }
       - "is_delivery_party2_efm_yes": ${ delivery_parties[5].efm_delivery if delivery_parties[5].knows_delivery_method else '' }
       - "is_delivery_party2_email_yes": ${ delivery_parties[5].email_delivery if delivery_parties[5].knows_delivery_method else '' }
-      - "delivery_party2_date": ${ delivery_parties[5].delivery_date if delivery_parties[5].knows_delivery_method else '' }
-      - "delivery_party2_time": ${ format_time(delivery_parties[5].delivery_time, format='h:mm') if delivery_parties[5].knows_delivery_method else '' }
-      - "is_delivery_party2_am_yes": ${ True if format_time(delivery_parties[5].delivery_time, format='a')=='AM' else '' }
-      - "is_delivery_party2_am_no": ${ True if format_time(delivery_parties[5].delivery_time, format='a')=='PM' else '' }
+      - "delivery_party2_date": ${ delivery_parties[5].delivery_date if delivery_parties[5].knows_delivery_method and delivery_parties[5].knows_delivery_date else '' }
+      - "delivery_party2_time": ${ format_time(delivery_parties[5].delivery_time, format='h:mm') if delivery_parties[5].knows_delivery_method and delivery_parties[5].knows_delivery_time else '' }
+      - "is_delivery_party2_am_yes": ${ True if delivery_parties[5].knows_delivery_method and format_time(delivery_parties[5].delivery_time, format='a')=='AM' else '' }
+      - "is_delivery_party2_am_no": ${ True if delivery_parties[5].knows_delivery_method and format_time(delivery_parties[5].delivery_time, format='a')=='PM' else '' }
 
       - "user": ${ users[0].name.full(middle="full") }
       - "user_mail_address_line_one": ${ users[0].address.line_one(bare=True) }
@@ -1570,10 +1774,10 @@ attachment:
       - "is_delivery_party1_mail_yes": ${ delivery_parties[6].mail_delivery if delivery_parties[6].knows_delivery_method else '' }
       - "is_delivery_party1_efm_yes": ${ delivery_parties[6].efm_delivery if delivery_parties[6].knows_delivery_method else '' }
       - "is_delivery_party1_email_yes": ${ delivery_parties[6].email_delivery if delivery_parties[6].knows_delivery_method else '' }
-      - "delivery_party1_date": ${ delivery_parties[6].delivery_date if delivery_parties[6].knows_delivery_method else '' }
-      - "delivery_party1_time": ${ format_time(delivery_parties[6].delivery_time, format='h:mm') if delivery_parties[6].knows_delivery_method else '' }
-      - "is_delivery_party1_am_yes": ${ True if format_time(delivery_parties[6].delivery_time, format='a')=='AM' else '' }
-      - "is_delivery_party1_am_no": ${ True if format_time(delivery_parties[6].delivery_time, format='a')=='PM' else '' }
+      - "delivery_party1_date": ${ delivery_parties[6].delivery_date if delivery_parties[6].knows_delivery_method and delivery_parties[6].knows_delivery_date else '' }
+      - "delivery_party1_time": ${ format_time(delivery_parties[6].delivery_time, format='h:mm') if delivery_parties[6].knows_delivery_method and delivery_parties[6].knows_delivery_time else '' }
+      - "is_delivery_party1_am_yes": ${ True if delivery_parties[6].knows_delivery_method and format_time(delivery_parties[6].delivery_time, format='a')=='AM' else '' }
+      - "is_delivery_party1_am_no": ${ True if delivery_parties[6].knows_delivery_method and format_time(delivery_parties[6].delivery_time, format='a')=='PM' else '' }
       
       - "delivery_party2_name_full": | 
           % if delivery_parties[7].is_represented:
@@ -1587,10 +1791,10 @@ attachment:
       - "is_delivery_party2_mail_yes": ${ delivery_parties[7].mail_delivery if delivery_parties[7].knows_delivery_method else '' }
       - "is_delivery_party2_efm_yes": ${ delivery_parties[7].efm_delivery if delivery_parties[7].knows_delivery_method else '' }
       - "is_delivery_party2_email_yes": ${ delivery_parties[7].email_delivery if delivery_parties[7].knows_delivery_method else '' }
-      - "delivery_party2_date": ${ delivery_parties[7].delivery_date if delivery_parties[7].knows_delivery_method else '' }
-      - "delivery_party2_time": ${ format_time(delivery_parties[7].delivery_time, format='h:mm') if delivery_parties[7].knows_delivery_method else '' }
-      - "is_delivery_party2_am_yes": ${ True if format_time(delivery_parties[7].delivery_time, format='a')=='AM' else '' }
-      - "is_delivery_party2_am_no": ${ True if format_time(delivery_parties[7].delivery_time, format='a')=='PM' else '' }
+      - "delivery_party2_date": ${ delivery_parties[7].delivery_date if delivery_parties[7].knows_delivery_method and delivery_parties[7].knows_delivery_date else '' }
+      - "delivery_party2_time": ${ format_time(delivery_parties[7].delivery_time, format='h:mm') if delivery_parties[7].knows_delivery_method and delivery_parties[7].knows_delivery_time else '' }
+      - "is_delivery_party2_am_yes": ${ True if delivery_parties[7].knows_delivery_method and format_time(delivery_parties[7].delivery_time, format='a')=='AM' else '' }
+      - "is_delivery_party2_am_no": ${ True if delivery_parties[7].knows_delivery_method and format_time(delivery_parties[7].delivery_time, format='a')=='PM' else '' }
       
       - "user": ${ users[0].name.full(middle="full") }
       - "user_mail_address_line_one": ${ users[0].address.line_one(bare=True) }
@@ -1661,10 +1865,10 @@ attachment:
       - "is_delivery_party1_mail_yes": ${ delivery_parties[0].mail_delivery if delivery_parties[0].knows_delivery_method else '' }
       - "is_delivery_party1_efm_yes": ${ delivery_parties[0].efm_delivery if delivery_parties[0].knows_delivery_method else '' }
       - "is_delivery_party1_email_yes": ${ delivery_parties[0].email_delivery if delivery_parties[0].knows_delivery_method else '' }
-      - "delivery_party1_date": ${ delivery_parties[0].delivery_date if delivery_parties[0].knows_delivery_method else '' }
-      - "delivery_party1_time": ${ format_time(delivery_parties[0].delivery_time, format='h:mm') if delivery_parties[0].knows_delivery_method else '' }
-      - "is_delivery_party1_am_yes": ${ True if format_time(delivery_parties[0].delivery_time, format='a')=='AM' else '' }
-      - "is_delivery_party1_am_no": ${ True if format_time(delivery_parties[0].delivery_time, format='a')=='PM' else '' }
+      - "delivery_party1_date": ${ delivery_parties[0].delivery_date if delivery_parties[0].knows_delivery_method and delivery_parties[0].knows_delivery_date else '' }
+      - "delivery_party1_time": ${ format_time(delivery_parties[0].delivery_time, format='h:mm') if delivery_parties[0].knows_delivery_method and delivery_parties[0].knows_delivery_time else '' }
+      - "is_delivery_party1_am_yes": ${ True if delivery_parties[0].knows_delivery_method and format_time(delivery_parties[0].delivery_time, format='a')=='AM' else '' }
+      - "is_delivery_party1_am_no": ${ True if delivery_parties[0].knows_delivery_method and format_time(delivery_parties[0].delivery_time, format='a')=='PM' else '' }
 
       - "delivery_party2_name_full": | 
           % if delivery_parties[1].is_represented:
@@ -1678,10 +1882,10 @@ attachment:
       - "is_delivery_party2_mail_yes": ${ delivery_parties[1].mail_delivery if delivery_parties[1].knows_delivery_method else '' }
       - "is_delivery_party2_efm_yes": ${ delivery_parties[1].efm_delivery if delivery_parties[1].knows_delivery_method else '' }
       - "is_delivery_party2_email_yes": ${ delivery_parties[1].email_delivery if delivery_parties[1].knows_delivery_method else '' }
-      - "delivery_party2_date": ${ delivery_parties[1].delivery_date if delivery_parties[1].knows_delivery_method else '' }
-      - "delivery_party2_time": ${ format_time(delivery_parties[1].delivery_time, format='h:mm') if delivery_parties[1].knows_delivery_method else '' }
-      - "is_delivery_party2_am_yes": ${ True if format_time(delivery_parties[1].delivery_time, format='a')=='AM' else '' }
-      - "is_delivery_party2_am_no": ${ True if format_time(delivery_parties[1].delivery_time, format='a')=='PM' else '' }
+      - "delivery_party2_date": ${ delivery_parties[1].delivery_date if delivery_parties[1].knows_delivery_method and delivery_parties[1].knows_delivery_date else '' }
+      - "delivery_party2_time": ${ format_time(delivery_parties[1].delivery_time, format='h:mm') if delivery_parties[1].knows_delivery_method and delivery_parties[1].knows_delivery_time else '' }
+      - "is_delivery_party2_am_yes": ${ True if delivery_parties[1].knows_delivery_method and format_time(delivery_parties[1].delivery_time, format='a')=='AM' else '' }
+      - "is_delivery_party2_am_no": ${ True if delivery_parties[1].knows_delivery_method and format_time(delivery_parties[1].delivery_time, format='a')=='PM' else '' }
 
       - "is_additional_proof_delivery_yes": ${ delivery_parties.number() > 2 }
 ---
