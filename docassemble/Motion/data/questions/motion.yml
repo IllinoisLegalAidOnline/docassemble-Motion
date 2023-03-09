@@ -62,7 +62,7 @@ code: |
     if anyone_opposing == True:
       other_parties.gather()
   else:
-    anyone_opposing = True
+    anyone_opposing = True # find a way to move to separate code block
     other_parties.gather()
   
   set_progress(25)
@@ -81,7 +81,10 @@ code: |
       additional_motion_body
       preview_additional_motion
   elif motion_type == "Reschedule a court date":
-    reschedule_date
+    if reschedule_date.minus(days=30) <= today():
+      within_30_days
+    elif (anyone_opposing == True or users.number() > 1) and reschedule_date.minus(days=7) <= today():
+      short_notice
     court_date_reason
     if continue_reason_type == "Other":
       continue_reason
@@ -91,6 +94,8 @@ code: |
         witness.address.address
       if used_due_diligence:
         due_diligence_effort
+      else:
+        no_due_diligence
       witness_testimony
       available_date
       continue_reason_string_built
@@ -98,13 +103,19 @@ code: |
       evidence_description
       if used_due_diligence:
         due_diligence_effort
+      else:
+        no_due_diligence
       evidence_shows
       available_date
       continue_reason_string_built
     preview_continue_or_extend
   else:
     unfinished_task
-    current_deadline
+    if current_deadline.minus(days=30) <= today():
+      within_30_days
+    elif (anyone_opposing == True or users.number() > 1) and current_deadline.minus(days=7) <= today():
+      short_notice      
+      
     new_deadline
     extension_reason
     preview_continue_or_extend
@@ -113,7 +124,7 @@ code: |
 
   set_progress(50)
   nav.set_section('section_delivery')
-  if anyone_opposing == True:
+  if anyone_opposing == True or users.number() > 1:
 
     notice_intro
     if trial_court_index == -1:
@@ -609,9 +620,44 @@ question: |
 fields:
   - Date: reschedule_date
     datatype: date
-    min: ${ today().format("yyyy-MM-dd") }
+    #min: ${ today().format("yyyy-MM-dd") }
   - Time: reschedule_time
     datatype: time
+---
+id: short notice warning
+continue button field: short_notice
+question: |
+  Court date soon
+subquestion: |
+  Since you have 7 days or fewer until the court date, you might not have enough time to notify all other parties in your case.
+  
+  You can still file the *Motion to Continue or Extend Time*, but the judge might not reschedule your court date. The judge’s clerk may be able to help you.
+---
+id: within 30 days
+continue button field: within_30_days
+question: |
+  Within 30 days
+subquestion: |
+  % if party_label == "plaintiff" or party_label == "petitioner":
+    % if motion_type == "Reschedule a court date":
+    Since the ${ reschedule_date } court date already passed, the judge can decide whether to hear your *Motion to Continue or Extend Time*. You will need a good reason for why the judge should reschedule the court date.
+    % elif motion_type == "Extend a deadline":
+    Since the ${ current_deadline } deadline already passed, the judge can decide whether to hear your *Motion to Continue or Extend Time*. You will need a good reason for why the judge should extend the deadline.
+    % endif
+    
+    If your case was dismissed, need to file a motion asking the judge to vacate the dismissal **within 30 days of when it was dismissed**. This will re-open the case so you do not need to re-file it. Check with court clerk for the status of your case.
+  % else:
+    % if motion_type == "Reschedule a court date":
+    Since the ${ reschedule_date } court date already passed, the judge can decide whether to hear your *Motion to Continue or Extend Time*. You will need a good reason for why the judge should reschedule the court date.
+    % elif motion_type == "Extend a deadline":
+      Since the ${ current_deadline } deadline already passed, the judge can decide whether to hear your *Motion to Continue or Extend Time*. You will need a good reason for why the judge should extend the deadline.
+    % endif
+
+    If a judgment was entered against you, you can file a Motion to Vacate a Default Judgment **within 30 days of when the court order was entered.** Check with court clerk for the status of your case.
+    
+    To learn more, read ILAO's article about [**Vacating a default judgment**](https://www.illinoislegalaid.org/legal-information/vacating-default-judgment).
+  % endif
+
 ---
 id: original court date reason
 question: |
@@ -709,6 +755,28 @@ fields:
   - no label: used_due_diligence
     datatype: yesnoradio  
 ---
+id: no due diligence
+event: no_due_diligence
+question: |
+  Sorry
+subquestion: |
+  To get your case rescheduled, 
+  % if continue_reason_type == "Witness unavailable":
+    % if know_witness_address:
+    you must have used due diligence to get ${ witness.name.full(middle="full") } to testify on ${ reschedule_date }.
+    % else:
+    you must have used due diligence to find ${ witness.name.full(middle="full") }'s address.
+    % endif
+  % else:
+    you must have used due diligence to get the evidence to court on ${ reschedule_date }.
+  % endif
+
+  Click **Back** if you made a mistake. Or you can talk with a lawyer to discuss your options. Use **[Get Legal Help](https://www.illinoislegalaid.org/get-legal-help)** to find free or low-cost legal services in your area.
+buttons:
+  - Exit: exit
+  - Restart: restart
+
+---
 id: due diligence explanation
 question: |
   % if continue_reason_type == "Witness unavailable":
@@ -723,12 +791,12 @@ question: |
 subquestion: |
   % if continue_reason_type == "Witness unavailable":
     % if know_witness_address:
-    Describe how you tried to get ${ witness.name.full(middle="full") } to testify on ${ reschedule_date }.
+    Describe everything you did to get ${ witness.name.full(middle="full") } to testify on ${ reschedule_date }.
     % else:
-    Describe how you tried to get ${ witness.name.full(middle="full") }'s address.
+    Describe everything you did to get ${ witness.name.full(middle="full") }'s address.
     % endif
   % else:
-    Describe how you tried to get the evidence (${ evidence_description }) to court on ${ reschedule_date }.
+    Describe everything you did to get the evidence (${ evidence_description }) to court on ${ reschedule_date }.
   % endif
 fields:
   - Efforts: due_diligence_effort
@@ -861,7 +929,7 @@ question: |
 fields:
   - Current deadline: current_deadline
     datatype: date
-    min: ${ today().format("yyyy-MM-dd") }
+    #min: ${ today().format("yyyy-MM-dd") }
 ---
 id: new deadline
 question: |
