@@ -53,7 +53,6 @@ code: |
   
   set_progress(15)
   nav.set_section('section_case_info')
-  #user_ask_role
   party_label
   users.gather()
   set_progress(20)
@@ -187,7 +186,7 @@ subquestion: |
   * Names and addresses of the other parties, and 
   * Names and addresses of the other parties’ lawyers, if any. 
 
-  You can find some of this information on other court papers you have about this case. 
+  You can find most of this information on other court papers you have about this case. 
 
   Set aside 10 to 15 minutes to finish this program. You can log in and save your work to return to later. 
  
@@ -532,8 +531,8 @@ fields:
           Examples include:
     
           * You will need to miss a court date due to a family medical emergency,
-          * You need more time to find a witness that you need for your case, or
-          * The evidence you need for your case won't be available on the scheduled court date.      
+          * You need more time to find a **witness** that you need for your case, or
+          * The **evidence** you need for your case won't be available on the scheduled court date.      
       - I need to extend the deadline to do something.: Extend a deadline  
         help: |
           Examples include:
@@ -579,7 +578,7 @@ subquestion: |
   
   If this looks good, click **Next**.
   
-  If you want to edit, click **Back**. OR SECTION
+  If you want to make changes, click **Back** or go to the [**Motion details**](${ url_action('section_motion') }) section.
   
   If you want to add another page, you can enter more text.
   
@@ -621,7 +620,7 @@ subquestion: |
   
   If this looks good, click **Next**.
   
-  If you want to edit, click **Back**. OR SECTION
+  If you want to make changes, click **Back** or go to the [**Motion details**](${ url_action('section_motion') }) section.
   
   If you want to add another page, you can enter more text.
   
@@ -644,11 +643,21 @@ fields:
 id: short notice warning
 continue button field: short_notice
 question: |
+  % if motion_type == "Reschedule a court date":
   Court date soon
+  % else:
+  Deadline soon
+  % endif
 subquestion: |
+  % if motion_type == "Reschedule a court date":
   Since you have 7 days or fewer until the court date, you might not have enough time to notify all other parties in your case.
   
   You can still file the *Motion to Continue or Extend Time*, but the judge might not reschedule your court date. The judge’s clerk may be able to help you.
+  % else:
+  Since you have 7 days or fewer until the deadline, you might not have enough time to notify all other parties in your case.
+  
+  You can still file the *Motion to Continue or Extend Time*, but the judge might not extend the deadline. The judge’s clerk may be able to help you.
+  % endif
 ---
 id: within 30 days
 continue button field: within_30_days
@@ -1005,7 +1014,7 @@ subquestion: |
   
   If this looks good, click **Next**.
   
-  If you want to edit, click **Back**. OR SECTION
+  If you want to make changes, click **Back** or go to the [**Motion details**](${ url_action('section_motion') }) section.
   
   If you want to add another page, you can enter more text.
   
@@ -1505,10 +1514,12 @@ code: |
     motion_order.enabled = True
     if motion_additional_page == True:
       additional_motion_attachment.enabled = True
+    motion_continue_single_pdf_bundle.enabled = False
   else:
     motion_continue_attachment.enabled = True
     motion_continue_instructions.enabled = True
     motion_continue_order.enabled = True 
+    motion_single_pdf_bundle.enabled = False
 
 ---
 objects:
@@ -1755,7 +1766,7 @@ attachment:
       - "defendants": ${list_defendants(users.full_names(), other_parties.full_names(), anyone_opposing, party_label)}
 
 
-      - "form_to_be_delivered": ${ form_name }
+      - "form_to_be_delivered": ${ form_name if motion_type == "Something else" else form_name + " to Continue or Extend Time" }
       - "delivery_party1_name_full": | 
           % if delivery_parties[2].is_represented:
           ${ delivery_parties[2].lawyer.name.full(middle="full") }, (lawyer for ${ delivery_parties[2].name.full(middle="full") })
@@ -2142,11 +2153,74 @@ review:
       **Original court date reason:**
       ${ court_date_reason }
     show if: motion_type == "Reschedule a court date"
+    
+  - Edit: continue_reason_type
+    button: |
+      **Reschedule for witness, evidence, or other:**
+      ${ continue_reason_type }
+    show if: (motion_type == "Reschedule a court date")
   - Edit: continue_reason
     button: |
       **You need to reschedule because:**
       ${ continue_reason }
-    show if: motion_type == "Reschedule a court date"
+    show if: (motion_type == "Reschedule a court date" and continue_reason_type == "Other")
+
+  - Edit: witness.name.first
+    button: |
+      **Your witness:**
+      ${ witness.name.full(middle='full') }    
+    show if: (motion_type == "Reschedule a court date" and continue_reason_type == "Witness unavailable")
+  - Edit: know_witness_address
+    button: |
+      **Do you know the witness's address?**
+      ${ word(yesno(know_witness_address)) }    
+    show if: (motion_type == "Reschedule a court date" and continue_reason_type == "Witness unavailable")
+  - Edit: witness.address.address
+    button: |
+      **Witness address:**
+      ${ witness.address.on_one_line(bare=True) }    
+    show if: (motion_type == "Reschedule a court date" and continue_reason_type == "Witness unavailable" and know_witness_address == True)
+  - Edit: due_diligence_effort
+    button: |
+      % if know_witness_address:
+      **How you used due diligence to get the witness:**
+      % else:
+      **How you used due diligence to find the witness:**
+      % endif
+      ${ due_diligence_effort }    
+    show if: (motion_type == "Reschedule a court date" and continue_reason_type == "Witness unavailable")
+  - Edit: witness_testimony
+    button: |
+      **What the witness's testimony will show:**
+      ${ witness_testimony }    
+    show if: (motion_type == "Reschedule a court date" and continue_reason_type == "Witness unavailable")
+  - Edit: available_date
+    button: |
+      **Witness will be available on:**
+      ${ available_date }    
+    show if: (motion_type == "Reschedule a court date" and continue_reason_type == "Witness unavailable")
+    
+  - Edit: evidence_description
+    button: |
+      **Your evidence:**
+      ${ evidence_description }    
+    show if: (motion_type == "Reschedule a court date" and continue_reason_type == "Evidence unavailable")
+  - Edit: due_diligence_effort
+    button: |
+      **How you used due diligence to get the evidence:**
+      ${ due_diligence_effort }    
+    show if: (motion_type == "Reschedule a court date" and continue_reason_type == "Evidence unavailable")
+  - Edit: evidence_shows
+    button: |
+      **What the evidence will show:**
+      ${ evidence_shows }    
+    show if: (motion_type == "Reschedule a court date" and continue_reason_type == "Evidence unavailable")
+  - Edit: available_date
+    button: |
+      **Evidence will be available on:**
+      ${ available_date }    
+    show if: (motion_type == "Reschedule a court date" and continue_reason_type == "Evidence unavailable")
+    
   - Edit: unfinished_task
     button: |
       **What you need more time to do:**
@@ -2271,7 +2345,7 @@ review:
 id: users review
 continue button field: users.revisit
 question: |
-  Edit the ${ user_ask_role }s
+  Edit the ${ party_label }s
 subquestion: |
   ${ users.table }
 
@@ -2290,10 +2364,14 @@ confirm: True
 id: other parties review
 continue button field: other_parties.revisit
 question: |
-  % if user_ask_role == "plaintiff":
+  % if party_label == "plaintiff":
     Edit the defendants
-  % else:
+  % elif party_label == "petitioner":
+    Edit the respondents
+  % elif party_label == "defendant":
     Edit the plaintiffs
+  % else:
+    Edit the petitioners
   % endif
 subquestion: |
   ${ other_parties.table }
@@ -2429,11 +2507,74 @@ review:
       **Original court date reason:**
       ${ court_date_reason }
     show if: motion_type == "Reschedule a court date"
+    
+  - Edit: continue_reason_type
+    button: |
+      **Reschedule for witness, evidence, or other:**
+      ${ continue_reason_type }
+    show if: (motion_type == "Reschedule a court date")
   - Edit: continue_reason
     button: |
       **You need to reschedule because:**
       ${ continue_reason }
-    show if: motion_type == "Reschedule a court date"
+    show if: (motion_type == "Reschedule a court date" and continue_reason_type == "Other")
+
+  - Edit: witness.name.first
+    button: |
+      **Your witness:**
+      ${ witness.name.full(middle='full') }    
+    show if: (motion_type == "Reschedule a court date" and continue_reason_type == "Witness unavailable")
+  - Edit: know_witness_address
+    button: |
+      **Do you know the witness's address?**
+      ${ word(yesno(know_witness_address)) }    
+    show if: (motion_type == "Reschedule a court date" and continue_reason_type == "Witness unavailable")
+  - Edit: witness.address.address
+    button: |
+      **Witness address:**
+      ${ witness.address.on_one_line(bare=True) }    
+    show if: (motion_type == "Reschedule a court date" and continue_reason_type == "Witness unavailable" and know_witness_address == True)
+  - Edit: due_diligence_effort
+    button: |
+      % if know_witness_address:
+      **How you used due diligence to get the witness:**
+      % else:
+      **How you used due diligence to find the witness:**
+      % endif
+      ${ due_diligence_effort }    
+    show if: (motion_type == "Reschedule a court date" and continue_reason_type == "Witness unavailable")
+  - Edit: witness_testimony
+    button: |
+      **What the witness's testimony will show:**
+      ${ witness_testimony }    
+    show if: (motion_type == "Reschedule a court date" and continue_reason_type == "Witness unavailable")
+  - Edit: available_date
+    button: |
+      **Witness will be available on:**
+      ${ available_date }    
+    show if: (motion_type == "Reschedule a court date" and continue_reason_type == "Witness unavailable")
+    
+  - Edit: evidence_description
+    button: |
+      **Your evidence:**
+      ${ evidence_description }    
+    show if: (motion_type == "Reschedule a court date" and continue_reason_type == "Evidence unavailable")
+  - Edit: due_diligence_effort
+    button: |
+      **How you used due diligence to get the evidence:**
+      ${ due_diligence_effort }    
+    show if: (motion_type == "Reschedule a court date" and continue_reason_type == "Evidence unavailable")
+  - Edit: evidence_shows
+    button: |
+      **What the evidence will show:**
+      ${ evidence_shows }    
+    show if: (motion_type == "Reschedule a court date" and continue_reason_type == "Evidence unavailable")
+  - Edit: available_date
+    button: |
+      **Evidence will be available on:**
+      ${ available_date }    
+    show if: (motion_type == "Reschedule a court date" and continue_reason_type == "Evidence unavailable")
+    
   - Edit: unfinished_task
     button: |
       **What you need more time to do:**
