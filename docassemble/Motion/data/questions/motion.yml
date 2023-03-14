@@ -38,7 +38,6 @@ sections:
   - section_delivery: Notice and delivery
   - section_about_you: About you
   - section_download: Download  
-
 ---
 # interview order block
 mandatory: True
@@ -49,7 +48,8 @@ code: |
   set_progress(5)
   whats_next
   accept_terms
-  lawsuit_information
+  if existing_case == False:
+    must_be_existing_case
   
   set_progress(15)
   nav.set_section('section_case_info')
@@ -81,7 +81,9 @@ code: |
       additional_motion_body
       preview_additional_motion
   elif motion_type == "Reschedule a court date":
-    if reschedule_date.minus(days=30) <= today():
+    if date_difference(starting=reschedule_date, ending=today()).days > 30:
+      beyond_30_days
+    elif today() > reschedule_date and date_difference(starting=reschedule_date, ending=today()).days <= 30:
       within_30_days
     elif (anyone_opposing == True or users.number() > 1) and reschedule_date.minus(days=7) <= today():
       short_notice
@@ -111,11 +113,13 @@ code: |
     preview_continue_or_extend
   else:
     unfinished_task
-    if current_deadline.minus(days=30) <= today():
+    if date_difference(starting=current_deadline, ending=today()).days > 30:
+      beyond_30_days
+    elif today() > current_deadline and date_difference(starting=current_deadline, ending=today()).days <= 30:
       within_30_days
     elif (anyone_opposing == True or users.number() > 1) and current_deadline.minus(days=7) <= today():
-      short_notice      
-      
+      short_notice
+
     new_deadline
     extension_reason
     preview_continue_or_extend
@@ -159,7 +163,6 @@ code: |
   set_progress(100)
   nav.set_section('section_download')
   get_docs_screen
-
 ---
 id: welcome
 question: |
@@ -167,9 +170,9 @@ question: |
 subquestion: |
   Welcome to Illinois Legal Aid Online's **Motion** Easy Form.
 
-  This program creates an Motion form that asks the judge to do something in a court case you are involved in.
+  A motion is a request to the judge to make the court or a party in the case do something. This program makes a *Motion* or a *Motion to Continue or Extend Time* based on what you need.
   
-  Learn about [**responding to a lawsuit**](https://www.illinoislegalaid.org/node/32236).
+  To learn more, read about [**preparing, filing, and presenting motions in court**](https://www.illinoislegalaid.org/node/32286).
 field: sees_nav_bar
 ---
 id: instructions
@@ -177,15 +180,16 @@ continue button field: how_to_use
 question: |
   Instructions
 subquestion: |
-  To use this program you will need: 
+  To use this program you will need to know: 
 
-  * Names and addresses of the other parties, 
-  * Names and addresses of the other parties’ lawyers, and 
-  * The court case number. 
+  * Your court case information, 
+  * What you want the court to do,
+  * Names and addresses of the other parties, and 
+  * Names and addresses of the other parties’ lawyers, if any. 
 
-  You can find this information on other court papers you have about this case. 
+  You can find some of this information on other court papers you have about this case. 
 
-  Set aside 5 to 10 minutes to finish this program. You can log in and save your work to return to later. 
+  Set aside 10 to 15 minutes to finish this program. You can log in and save your work to return to later. 
  
   ${ collapse_template(help_example) }  
 
@@ -202,11 +206,13 @@ continue button field: whats_next
 question: |
   After you finish this program
 subquestion: |
-  After you download your **{Motion}**, you must file it with the court. This program does not file your ${ form_name } for you.
+  After you download your Motion, you must file it with the court. This program does not file your ${ form_name } for you.
   
-  Also, schedule court data and notify other parties.  
+  You may need to schedule a court date for when the judge will hear your motion. The scheduling process is different depending on your location and case type. Check with your local circuit clerk for how to schedule a motion hearing.
   
-  Read the "How to File an Appearance" instructions you can download at the end of this program. 
+  Finally, you will need to send your *Motion* and *Notice of Court Date for Motion* forms to other parties in your case, if there are any.
+  
+  To learn more, read the "How to File and Send a Motion" instructions you can download at the end of this program. 
 ---
 id: accept terms
 question: |
@@ -253,26 +259,37 @@ buttons:
   - Exit: exit
   - Restart: restart
 ---
-id: lawsuit information
-continue button field: lawsuit_information
+id: existing case
 question: |
-  Lawsuit information
+  Are you filing a motion into an existing case?
 subquestion: |
-  If you received a Complaint and Summons, you have been sued. You need to tell the court you want to participate in your case. In some cases, you need to file an **{Answer}** to respond to the Complaint.
+  The court case must have already started, either by you or someone else.
   
-  If you do not respond, you can be found in default, and the court can rule against you. In some cases, like evictions, you do not need to file an **{Appearance}**. Instead, you can attend your court hearing.
-  
-  Learn more about [**responding to a lawsuit**](https://www.illinoislegalaid.org/node/32236).
-  
-  ${ collapse_template(started_lawsuit_help) }  
-  
-  If you would like help finding free or low-cost legal services in your area, use [**Get Legal Help**](https://www.illinoislegalaid.org/get-legal-help).
+  ${ collapse_template(motion_help) }  
+fields:
+  - no label: existing_case
+    datatype: yesnoradio  
+
 ---
-template: started_lawsuit_help
+template: motion_help
 subject: |
-  **What if I started the lawsuit?**
-content: |  
-  You can also file an Appearance if you started the lawsuit. Usually, you only need to file an Appearance if you had a lawyer in the case before, but now you want to represent yourself.
+  **What if I am not sure?**
+content: |
+  Most motions are filed into cases that are still ongoing, but some motions are filed into cases after they are finished. For example, someone might file a Motion to Seal a Court Record into a case that is already over.
+
+---
+id: must be existing case
+event: must_be_existing_case
+question: |
+  Sorry
+subquestion: |
+  You can only file a motion into a case that has already started.
+
+  Click **Back** if you made a mistake. Or you can talk with a lawyer to discuss your options. Use **[Get Legal Help](https://www.illinoislegalaid.org/get-legal-help)** to find free or low-cost legal services in your area.
+buttons:
+  - Exit: exit
+  - Restart: restart
+
 ---
 id: party label
 question: |
@@ -645,19 +662,44 @@ subquestion: |
     Since the ${ current_deadline } deadline already passed, the judge can decide whether to hear your *Motion to Continue or Extend Time*. You will need a good reason for why the judge should extend the deadline.
     % endif
     
-    If your case was dismissed, need to file a motion asking the judge to vacate the dismissal **within 30 days of when it was dismissed**. This will re-open the case so you do not need to re-file it. Check with court clerk for the status of your case.
+    If your case was dismissed, you will need to file a motion asking the judge to vacate the dismissal **within 30 days of when it was dismissed**. This will re-open the case so you do not need to re-file it. Check with court clerk for the status of your case.
   % else:
     % if motion_type == "Reschedule a court date":
     Since the ${ reschedule_date } court date already passed, the judge can decide whether to hear your *Motion to Continue or Extend Time*. You will need a good reason for why the judge should reschedule the court date.
     % elif motion_type == "Extend a deadline":
-      Since the ${ current_deadline } deadline already passed, the judge can decide whether to hear your *Motion to Continue or Extend Time*. You will need a good reason for why the judge should extend the deadline.
+    Since the ${ current_deadline } deadline already passed, the judge can decide whether to hear your *Motion to Continue or Extend Time*. You will need a good reason for why the judge should extend the deadline.
     % endif
 
     If a judgment was entered against you, you can file a Motion to Vacate a Default Judgment **within 30 days of when the court order was entered.** Check with court clerk for the status of your case.
     
-    To learn more, read ILAO's article about [**Vacating a default judgment**](https://www.illinoislegalaid.org/legal-information/vacating-default-judgment).
+    To learn more, read ILAO's article about [**vacating a default judgment**](https://www.illinoislegalaid.org/node/32421).
   % endif
 
+---
+id: beyond 30 days
+continue button field: beyond_30_days
+question: |
+  More than 30 days
+subquestion: |
+  % if party_label == "plaintiff" or party_label == "petitioner":
+    % if motion_type == "Reschedule a court date":
+    Since the ${ reschedule_date } court date already passed, the judge might not hear your *Motion to Continue or Extend Time*. You will need a good reason for why the judge should reschedule the court date.
+    % elif motion_type == "Extend a deadline":
+    Since the ${ current_deadline } deadline already passed, the judge might not hear your *Motion to Continue or Extend Time*. You will need a good reason for why the judge should extend the deadline.
+    % endif
+    
+    Your case might have been dismissed. If that happened, you will need to re-file it. Check with court clerk for the status of your case.
+  % else:
+    % if motion_type == "Reschedule a court date":
+    Since the ${ reschedule_date } court date already passed, the judge might not hear your *Motion to Continue or Extend Time*. You will need a good reason for why the judge should reschedule the court date.
+    % elif motion_type == "Extend a deadline":
+    Since the ${ current_deadline } deadline already passed, the judge might not hear your *Motion to Continue or Extend Time*. You will need a good reason for why the judge should extend the deadline.
+    % endif
+
+    Your case might have ended, and a judgment might have been entered against you. Check with court clerk for the status of your case.
+    
+    To learn more, read ILAO's article about [**undoing a default judgment after 30 days have passed**](https://www.illinoislegalaid.org/node/32391).
+  % endif
 ---
 id: original court date reason
 question: |
@@ -1996,13 +2038,10 @@ question: |
 subquestion: |
   Edit your answers below.
 review: 
-  - Edit: user_ask_role
+  - Edit: party_label
     button: |
-      % if user_ask_role == "plaintiff":
-        **Your role:** plaintiff or petitioner
-      % else:
-        **Your role:** defendant or respondent
-      % endif
+      **Party label:**
+      ${ party_label }
   - Edit: users.revisit
     button: |
       **Your party: (Edit to change name, lawyer, address, and delivery info)**
@@ -2010,6 +2049,16 @@ review:
       % for my_var in users:
         * ${ my_var.name.full(middle="full") }
       % endfor
+  - Edit: anyone_opposing
+    button: |
+      % if party_label == "plaintiff":
+      **Any defendants?**
+      ${word(yesno(anyone_opposing))}
+      % else:
+      **Any respondents?**
+      ${word(yesno(anyone_opposing))}
+      % endif
+    show if: (party_label == 'plaintiff' or party_label == 'petitioner')
   - Edit: other_parties.revisit
     button: |
       **The other party: (Edit to change name, lawyer, address, and delivery info)**
@@ -2032,6 +2081,29 @@ review:
     button: |
       **County where this case is filed:**
       ${ trial_court.address.county }
+  - Edit: cook_district
+    button: |
+      **Cook County courthouse:**
+      % if cook_district == "15":
+      ${ "Daley Center, 50 W. Washington Street, Chicago" }
+      % elif cook_district == "16":
+      ${ "Second Municipal District, 5600 Old Orchard Road, Skokie" }
+      % elif cook_district == "17":
+      ${ "Third Municipal District, 2121 Euclid Avenue, Rolling Meadows" }
+      % elif cook_district == "18":
+      ${ "Fourth Municipal District, 1500 Maybrook Drive, Maywood" }
+      % elif cook_district == "19":
+      ${ "Fifth Municipal District, 10220 S. 76th Avenue, Bridgeview" }
+      % elif cook_district == "20":
+      ${ "Sixth Municipal District, 16501 South Kedzie Parkway, Markham" }
+      % elif cook_district == "21":
+      ${ "Domestic Violence Court, 555 W. Harrison Street, Chicago" }
+      % elif cook_district == "22":
+      ${ "George N. Leighton Criminal Court Building, 2600 S. California Avenue, Chicago" }
+      % else:
+      ${ "Juvenile Center, 2245 West Ogden Avenue, Chicago" }
+      % endif      
+    show if: trial_court_index == -1      
   - Edit: case_number
     button: |
       **Case number:**
@@ -2044,23 +2116,75 @@ review:
     button: |
       **Motion summary:**
       ${ motion_summary }
+    show if: motion_type == "Something else"
   - Edit: motion_body
     button: |
       **Motion text:**
       ${ motion_body }
+    show if: motion_type == "Something else"
   - Edit: motion_additional_page
     button: |
       **Do you want to add a second page to your motion?**  
       ${word(yesno(motion_additional_page))}
+    show if: motion_type == "Something else"
   - Edit: additional_motion_body
     button: |
       **Additional motion text:**
       ${ additional_motion_body }
-    show if: motion_additional_page
+    show if: (motion_additional_page and motion_type == "Something else")
+  - Edit: reschedule_date
+    button: |
+      **Original court date on:**
+      ${ reschedule_date } at ${ format_time(reschedule_time, "h:mm a") }
+    show if: motion_type == "Reschedule a court date"
+  - Edit: court_date_reason
+    button: |
+      **Original court date reason:**
+      ${ court_date_reason }
+    show if: motion_type == "Reschedule a court date"
+  - Edit: continue_reason
+    button: |
+      **You need to reschedule because:**
+      ${ continue_reason }
+    show if: motion_type == "Reschedule a court date"
+  - Edit: unfinished_task
+    button: |
+      **What you need more time to do:**
+      ${ unfinished_task }
+    show if: motion_type == "Extend a deadline"    
+  - Edit: current_deadline
+    button: |
+      **Current deadline:**
+      ${ current_deadline }
+    show if: motion_type == "Extend a deadline"    
+  - Edit: new_deadline
+    button: |
+      **New deadline:**
+      ${ new_deadline }
+    show if: motion_type == "Extend a deadline"    
+  - Edit: extension_reason
+    button: |
+      **You need more time because:**
+      ${ extension_reason }
+    show if: motion_type == "Extend a deadline"        
   - Edit: e_signature
     button: |
       **Do you want to add your e-signature to your forms?**
       ${ word(yesno(e_signature)) }
+  - Edit: has_court_date
+    button: |
+      **Do you already have a court date for your motion from the clerk?**
+      ${ word(yesno(has_court_date)) }
+  - Edit: hearing_date
+    button: |
+      **Motion court date on:**
+      ${ hearing_date } at ${ format_time(hearing_time, "h:mm a") }
+    show if: has_court_date
+  - Edit: courtroom
+    button: |
+      **Courtroom:**
+      ${ courtroom }
+    show if: has_court_date
   - Edit: users[0].address.address
     button: |
       **Your address:**
@@ -2193,13 +2317,10 @@ question: |
 subquestion: |
   Edit your answers below.
 review: 
-  - Edit: user_ask_role
+  - Edit: party_label
     button: |
-      % if user_ask_role == "plaintiff":
-        **Your role:** plaintiff or petitioner
-      % else:
-        **Your role:** defendant or respondent
-      % endif
+      **Party label:**
+      ${ party_label }
   - Edit: users.revisit
     button: |
       **Your party: (Edit to change name, lawyer, address, and delivery info)**
@@ -2207,6 +2328,16 @@ review:
       % for my_var in users:
         * ${ my_var.name.full(middle="full") }
       % endfor
+  - Edit: anyone_opposing
+    button: |
+      % if party_label == "plaintiff":
+      **Any defendants?**
+      ${word(yesno(anyone_opposing))}
+      % else:
+      **Any respondents?**
+      ${word(yesno(anyone_opposing))}
+      % endif
+    show if: (party_label == 'plaintiff' or party_label == 'petitioner')
   - Edit: other_parties.revisit
     button: |
       **The other party: (Edit to change name, lawyer, address, and delivery info)**
@@ -2229,6 +2360,29 @@ review:
     button: |
       **County where this case is filed:**
       ${ trial_court.address.county }
+  - Edit: cook_district
+    button: |
+      **Cook County courthouse:**
+      % if cook_district == "15":
+      ${ "Daley Center, 50 W. Washington Street, Chicago" }
+      % elif cook_district == "16":
+      ${ "Second Municipal District, 5600 Old Orchard Road, Skokie" }
+      % elif cook_district == "17":
+      ${ "Third Municipal District, 2121 Euclid Avenue, Rolling Meadows" }
+      % elif cook_district == "18":
+      ${ "Fourth Municipal District, 1500 Maybrook Drive, Maywood" }
+      % elif cook_district == "19":
+      ${ "Fifth Municipal District, 10220 S. 76th Avenue, Bridgeview" }
+      % elif cook_district == "20":
+      ${ "Sixth Municipal District, 16501 South Kedzie Parkway, Markham" }
+      % elif cook_district == "21":
+      ${ "Domestic Violence Court, 555 W. Harrison Street, Chicago" }
+      % elif cook_district == "22":
+      ${ "George N. Leighton Criminal Court Building, 2600 S. California Avenue, Chicago" }
+      % else:
+      ${ "Juvenile Center, 2245 West Ogden Avenue, Chicago" }
+      % endif      
+    show if: trial_court_index == -1      
   - Edit: case_number
     button: |
       **Case number:**
@@ -2249,19 +2403,57 @@ review:
     button: |
       **Motion summary:**
       ${ motion_summary }
+    show if: motion_type == "Something else"
   - Edit: motion_body
     button: |
       **Motion text:**
       ${ motion_body }
+    show if: motion_type == "Something else"
   - Edit: motion_additional_page
     button: |
       **Do you want to add a second page to your motion?**  
       ${word(yesno(motion_additional_page))}
+    show if: motion_type == "Something else"
   - Edit: additional_motion_body
     button: |
       **Additional motion text:**
       ${ additional_motion_body }
-    show if: motion_additional_page
+    show if: (motion_additional_page and motion_type == "Something else")
+  - Edit: reschedule_date
+    button: |
+      **Original court date on:**
+      ${ reschedule_date } at ${ format_time(reschedule_time, "h:mm a") }
+    show if: motion_type == "Reschedule a court date"
+  - Edit: court_date_reason
+    button: |
+      **Original court date reason:**
+      ${ court_date_reason }
+    show if: motion_type == "Reschedule a court date"
+  - Edit: continue_reason
+    button: |
+      **You need to reschedule because:**
+      ${ continue_reason }
+    show if: motion_type == "Reschedule a court date"
+  - Edit: unfinished_task
+    button: |
+      **What you need more time to do:**
+      ${ unfinished_task }
+    show if: motion_type == "Extend a deadline"    
+  - Edit: current_deadline
+    button: |
+      **Current deadline:**
+      ${ current_deadline }
+    show if: motion_type == "Extend a deadline"    
+  - Edit: new_deadline
+    button: |
+      **New deadline:**
+      ${ new_deadline }
+    show if: motion_type == "Extend a deadline"    
+  - Edit: extension_reason
+    button: |
+      **You need more time because:**
+      ${ extension_reason }
+    show if: motion_type == "Extend a deadline"        
   - Edit: e_signature
     button: |
       **Do you want to add your e-signature to your forms?**
@@ -2289,7 +2481,21 @@ review:
       % for my_var in other_parties:
         * ${ my_var.name.full(middle="full") }
       % endfor
-
+  - Edit: has_court_date
+    button: |
+      **Do you already have a court date for your motion from the clerk?**
+      ${ word(yesno(has_court_date)) }
+  - Edit: hearing_date
+    button: |
+      **Motion court date on:**
+      ${ hearing_date } at ${ format_time(hearing_time, "h:mm a") }
+    show if: has_court_date
+  - Edit: courtroom
+    button: |
+      **Courtroom:**
+      ${ courtroom }
+    show if: has_court_date
+      
 ---
 id: about you review screen
 event: section_about_you
