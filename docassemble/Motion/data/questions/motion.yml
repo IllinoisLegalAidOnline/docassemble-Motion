@@ -1485,6 +1485,8 @@ code: |
   motion_continue_attachment.enabled = False
   motion_continue_instructions.enabled = False
   motion_continue_order.enabled = False 
+  motion_single_pdf_bundle.enabled = False
+  motion_continue_single_pdf_bundle.enabled = False
 
   if anyone_opposing == True:
     if delivery_parties.number() < 3:
@@ -1514,12 +1516,14 @@ code: |
     motion_order.enabled = True
     if motion_additional_page == True:
       additional_motion_attachment.enabled = True
+    motion_single_pdf_bundle.enabled = True
     motion_continue_single_pdf_bundle.enabled = False
   else:
     motion_continue_attachment.enabled = True
     motion_continue_instructions.enabled = True
     motion_continue_order.enabled = True 
     motion_single_pdf_bundle.enabled = False
+    motion_continue_single_pdf_bundle.enabled = True
 
 ---
 objects:
@@ -1527,8 +1531,8 @@ objects:
   - al_court_bundle: ALDocumentBundle.using(elements=[motion_single_pdf_bundle, motion_continue_single_pdf_bundle, notice_single_pdf_bundle, motion_order, motion_continue_order], filename="motion.pdf", title="Motion")
 ---
 objects:
-  - motion_single_pdf_bundle: ALDocumentBundle.using(elements=[motion_attachment, additional_motion_attachment, motion_additional_delivery, motion_additional_delivery_2, motion_additional_delivery_3], filename="motion.pdf", title="Motion", enabled=True)
-  - motion_continue_single_pdf_bundle: ALDocumentBundle.using(elements=[motion_continue_attachment, motion_additional_delivery, motion_additional_delivery_2, motion_additional_delivery_3], filename="motion.pdf", title="Motion to Continue or Extend Time", enabled=True)
+  - motion_single_pdf_bundle: ALDocumentBundle.using(elements=[motion_attachment, additional_motion_attachment, motion_additional_delivery, motion_additional_delivery_2, motion_additional_delivery_3], filename="motion.pdf", title="Motion")
+  - motion_continue_single_pdf_bundle: ALDocumentBundle.using(elements=[motion_continue_attachment, motion_additional_delivery, motion_additional_delivery_2, motion_additional_delivery_3], filename="motion.pdf", title="Motion to Continue or Extend Time")
   - notice_single_pdf_bundle: ALDocumentBundle.using(elements=[notice_attachment, additional_motion_attachment, motion_additional_delivery, motion_additional_delivery_2, motion_additional_delivery_3], filename="notice.pdf", title="Notice of Court Date for Motion", enabled=True)
 ---
 #code: |
