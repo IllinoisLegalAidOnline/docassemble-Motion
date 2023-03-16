@@ -88,7 +88,7 @@ code: |
       short_notice
     court_date_reason
     if continue_reason_type == "Other":
-      continue_reason
+      continue_reason_string_built
     elif continue_reason_type == "Witness unavailable":
       witness.name.first
       if know_witness_address:
@@ -603,7 +603,7 @@ question: |
 subquestion: |
   Enter the second page of your motion.
   
-  The additional motion page has room for about 36 lines of text. You can preview it on the next screen.
+  The additional motion page has room for about 36 lines of text. You can preview both pages of the motion on the next screen.
 fields:
   - Motion: additional_motion_body
     input type: area
@@ -743,7 +743,7 @@ question: |
 subquestion: |
   The motion to continue has room for about 15 lines of text. You can preview it on the next screen.
 fields:
-  - I need to reschedule because:: continue_reason
+  - I need to reschedule because:: continue_reason_text
     input type: area
     rows: 10
 
@@ -795,12 +795,12 @@ question: |
 subquestion: |
   % if continue_reason_type == "Witness unavailable":
     % if know_witness_address:
-    Using 'due diligence' means doing what is expected or reasonable to get ${ witness.name.full(middle="full") } to testify on ${ reschedule_date }.
+    Using "due diligence" means doing what is expected or reasonable to get ${ witness.name.full(middle="full") } to testify on ${ reschedule_date }.
     % else:
-    Using 'due diligence' means doing what is expected or reasonable to find ${ witness.name.full(middle="full") }'s address.
+    Using "due diligence" means doing what is expected or reasonable to find ${ witness.name.full(middle="full") }'s address.
     % endif
   % else:
-    Using 'due diligence' means doing what is expected or reasonable to get the evidence (${ evidence_description }) to court on ${ reschedule_date }.
+    Using "due diligence" means doing what is expected or reasonable to get the evidence (${ evidence_description }) to court on ${ reschedule_date }.
   % endif
 fields:
   - no label: used_due_diligence
@@ -899,14 +899,14 @@ subquestion: |
   Explain the facts that the evidence will show.
   % endif
 fields:
-  - What testimony will show: witness_testimony
+  - What the testimony will show: witness_testimony
     input type: area
     rows: 3
     maxlength: 150
     show if:
       code: |
         continue_reason_type == "Witness unavailable"
-  - What evidence will show: evidence_shows
+  - What the evidence will show: evidence_shows
     input type: area
     rows: 3
     maxlength: 150
@@ -942,23 +942,27 @@ sets:
   - continue_reason
   - continue_reason_string_built
 code: |
-  if continue_reason_type == "Witness unavailable":
-    temp_continue_reason = "1. The evidence is witness testimony from " + str(witness.name.full(middle='full')) + ".\n"
-  
-    if know_witness_address:
-      temp_continue_reason += "2. I have used due diligence to get " + str(witness.name.full(middle='full')) + " to testify on " + reschedule_date + ". Specifically, I have: " + due_diligence_effort.rstrip('.') + ".\n3. The evidence will show the following: " + witness_testimony.rstrip('.') + ".\n4. The witness, " + str(witness.name.full(middle='full')) + ", resides at " + str(witness.address.on_one_line(bare=True)) + ".\n5. "
-    else:
-      temp_continue_reason += "2. The witness's address is unknown. I have used due diligence to find where " + str(witness.name.full(middle='full')) + " lives. Specifically, I have done the following: " + due_diligence_effort.rstrip('.') + ".\n3. The evidence will show the following: " + witness_testimony.rstrip('.') + ".\n4. "
-
-    temp_continue_reason += "If I am given more time, I can get the witness by " + available_date + "."
-    
+  if continue_reason_type == "Other":
+    continue_reason = continue_reason_text
+    continue_reason_string_built = True    
   else:
-    temp_continue_reason = "1. The evidence is: " + evidence_description.rstrip('.') + ".\n"
-    temp_continue_reason += "2. I have used due diligence to get " + evidence_description.rstrip('.') + " to court on " + reschedule_date + ". Specifically, I have: " + due_diligence_effort.rstrip('.') + ".\n3. The evidence will show the following: " + evidence_shows.rstrip('.')
-    temp_continue_reason += ".\n4. If I am given more time, I can get " + evidence_description.rstrip('.') + " by " + available_date + "."
-
-  continue_reason = "Evidence material to my case is not available on " + reschedule_date + ". Therefore, I ask the court for more time to get it.\n" + str(temp_continue_reason)
-  continue_reason_string_built = True
+    if continue_reason_type == "Witness unavailable":
+      temp_continue_reason = "1. The evidence is witness testimony from " + str(witness.name.full(middle='full')) + ".\n"
+    
+      if know_witness_address:
+        temp_continue_reason += "2. I have used due diligence to get " + str(witness.name.full(middle='full')) + " to testify on " + reschedule_date + ". Specifically, I have: " + due_diligence_effort.rstrip('.') + ".\n3. The evidence will show the following: " + witness_testimony.rstrip('.') + ".\n4. The witness, " + str(witness.name.full(middle='full')) + ", resides at " + str(witness.address.on_one_line(bare=True)) + ".\n5. "
+      else:
+        temp_continue_reason += "2. The witness's address is unknown. I have used due diligence to find where " + str(witness.name.full(middle='full')) + " lives. Specifically, I have done the following: " + due_diligence_effort.rstrip('.') + ".\n3. The evidence will show the following: " + witness_testimony.rstrip('.') + ".\n4. "
+  
+      temp_continue_reason += "If I am given more time, I can get the witness by " + available_date + "."
+      
+    else:
+      temp_continue_reason = "1. The evidence is: " + evidence_description.rstrip('.') + ".\n"
+      temp_continue_reason += "2. I have used due diligence to get " + evidence_description.rstrip('.') + " to court on " + reschedule_date + ". Specifically, I have: " + due_diligence_effort.rstrip('.') + ".\n3. The evidence will show the following: " + evidence_shows.rstrip('.')
+      temp_continue_reason += ".\n4. If I am given more time, I can get " + evidence_description.rstrip('.') + " by " + available_date + "."
+  
+    continue_reason = "Evidence material to my case is not available on " + reschedule_date + ". Therefore, I ask the court for more time to get it.\n" + str(temp_continue_reason)
+    continue_reason_string_built = True
 reconsider: True
 ---  
 id: unfinished task
@@ -1023,10 +1027,6 @@ subquestion: |
   ${ pdf_concatenate(motion_continue_attachment['preview'], filename="motion-continue-preview.pdf") }
 
   **Note: this is not a complete form.** Finish the program to get all your forms.
-
-
-
-
 ---
 id: phone number
 question: |
@@ -1133,7 +1133,7 @@ choices:
 ---
 template: cook_district_help
 subject: |
-  **What if I am still not sure?**
+  **What if I am not sure?**
 content: |  
   Visit **[Illinois Court Help](https://www.ilcourthelp.gov/)**, or you can call or text (833) 411-1121 for assistance.
 
@@ -1153,7 +1153,7 @@ id: hearing info
 question: |
   Court hearing information
 subquestion: |
-  Enter the date, time, and courtroom information for the court hearing on your motion. If the clerk did not give you a courtroom yet, leave it blank. You can add this information to the *Notice of Court Date for Motion* after you file your *Motion*.
+  Enter the date, time, and courtroom information for the court hearing on your motion. If the clerk did not give you a courtroom yet, leave it blank. You can add it to the *Notice of Court Date for Motion* after you file your *Motion*.
 fields:
   - Date: hearing_date
     datatype: date
@@ -1174,9 +1174,9 @@ continue button field: extra_delivery_forms
 question: |
   Additional Proof of Delivery
 subquestion: |
-  This program makes the Proof of Delivery forms for the first 8 parties.
+  This program makes the Proof of Delivery forms for up to 8 other parties.
   
-  You will need to fill out *Additional Proof of Delivery* forms for the other parties in your case. 
+  You will need to fill out *Additional Proof of Delivery* forms for ${comma_and_list(delivery_parties[8:])}. 
   
   You can download blank *Additional Proof of Delivery* forms at the end of this program.
 ---
@@ -1380,6 +1380,8 @@ question: |
   When will you send your ${ form_name } to ${ x.name.full(middle="full") }?
   % endif
 subquestion: |
+  Be sure to do this **before** you have a hearing on this ${ form_name }.
+  
   **Note:** If you do not know this now, be sure to add it to the Proof of Delivery section of your forms later.
 fields:
   - Date: x.delivery_date
@@ -1487,8 +1489,10 @@ code: |
   motion_continue_order.enabled = False 
   motion_single_pdf_bundle.enabled = False
   motion_continue_single_pdf_bundle.enabled = False
+  notice_single_pdf_bundle.enabled = False
 
   if anyone_opposing == True:
+    notice_single_pdf_bundle.enabled = True
     if delivery_parties.number() < 3:
       notice_attachment.enabled = True
     elif delivery_parties.number() < 5:
@@ -1509,6 +1513,8 @@ code: |
       motion_additional_delivery_3.enabled = True
       motion_additional_delivery_blank.enabled = True
       notice_attachment.enabled = True
+  else:
+    notice_single_pdf_bundle.enabled = False
       
   if motion_type == "Something else":   
     motion_attachment.enabled = True
@@ -1533,7 +1539,7 @@ objects:
 objects:
   - motion_single_pdf_bundle: ALDocumentBundle.using(elements=[motion_attachment, additional_motion_attachment, motion_additional_delivery, motion_additional_delivery_2, motion_additional_delivery_3], filename="motion.pdf", title="Motion")
   - motion_continue_single_pdf_bundle: ALDocumentBundle.using(elements=[motion_continue_attachment, motion_additional_delivery, motion_additional_delivery_2, motion_additional_delivery_3], filename="motion.pdf", title="Motion to Continue or Extend Time")
-  - notice_single_pdf_bundle: ALDocumentBundle.using(elements=[notice_attachment, additional_motion_attachment, motion_additional_delivery, motion_additional_delivery_2, motion_additional_delivery_3], filename="notice.pdf", title="Notice of Court Date for Motion", enabled=True)
+  - notice_single_pdf_bundle: ALDocumentBundle.using(elements=[notice_attachment, additional_motion_attachment, motion_additional_delivery, motion_additional_delivery_2, motion_additional_delivery_3], filename="notice.pdf", title="Notice of Court Date for Motion")
 ---
 #code: |
 #  motion_attachment.overflow_fields['motion_body'].overflow_trigger = 1280
@@ -1706,11 +1712,10 @@ attachment:
       - "court_date_reason_status": ${ court_date_reason == "Status" if motion_type == "Reschedule a court date" else ''}
       - "court_date_reason_other": ${ court_date_reason == "Something else" if motion_type == "Reschedule a court date" else ''}
       - "court_date_original": ${ reschedule_date  if motion_type == "Reschedule a court date" else ''}
-      - "court_time_original": ${ format_time(reschedule_time, format='h:mm')  if motion_type == "Reschedule a court date" else ''}
-      - "court_time_original_am": ${ (True if format_time(reschedule_time, format='a')=='AM' else '') if motion_type == "Reschedule a court date" else '' }
-      - "court_time_orginal_pm": ${ (True if format_time(reschedule_time, format='a')=='PM' else '') if motion_type == "Reschedule a court date" else '' }
-      - "continue_reason": ${ continue_reason if motion_type == "Reschedule a court date" else ''}
-
+      - "court_time_original": ${ format_time(reschedule_time, format='h:mm') if motion_type == "Reschedule a court date" else ''}
+      - "court_time_original_am": ${ True if format_time(reschedule_time, format='a')=='AM' and motion_type == "Reschedule a court date" else '' }
+      - "court_time_orginal_pm": ${ True if format_time(reschedule_time, format='a')=='PM' and motion_type == "Reschedule a court date" else '' }
+      - "continue_reason": ${ continue_reason if motion_type == "Reschedule a court date" else ''}            
       - "extend_cb": ${ motion_type == "Extend a deadline"}
       - "extend_task": ${ unfinished_task if motion_type == "Extend a deadline" else '' }
       - "extend_current_deadline": ${ current_deadline if motion_type == "Extend a deadline" else '' }
@@ -2163,10 +2168,10 @@ review:
       **Reschedule for witness, evidence, or other:**
       ${ continue_reason_type }
     show if: (motion_type == "Reschedule a court date")
-  - Edit: continue_reason
+  - Edit: continue_reason_text
     button: |
       **You need to reschedule because:**
-      ${ continue_reason }
+      ${ continue_reason_text }
     show if: (motion_type == "Reschedule a court date" and continue_reason_type == "Other")
 
   - Edit: witness.name.first
@@ -2517,10 +2522,10 @@ review:
       **Reschedule for witness, evidence, or other:**
       ${ continue_reason_type }
     show if: (motion_type == "Reschedule a court date")
-  - Edit: continue_reason
+  - Edit: continue_reason_text
     button: |
       **You need to reschedule because:**
-      ${ continue_reason }
+      ${ continue_reason_text }
     show if: (motion_type == "Reschedule a court date" and continue_reason_type == "Other")
 
   - Edit: witness.name.first
