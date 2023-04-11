@@ -526,46 +526,83 @@ fields:
   - no label: motion_type
     datatype: radio
     choices:
-      - I need to reschedule a court date that was already scheduled.: Reschedule a court date
+      - I want to reschedule a court date that was already scheduled.: Reschedule a court date
         help: |
           Examples include:
     
           * You will need to miss a court date due to a family medical emergency,
-          * You need more time to find a **witness** that you need for your case, or
+          * You need more time to find a **witness** that you need for your case, and
           * The **evidence** you need for your case won't be available on the scheduled court date.      
-      - I need to extend the deadline to do something.: Extend a deadline  
+      - I want to extend the deadline to do something.: Extend a deadline  
         help: |
           Examples include:
     
-          * You need more time to file an Answer in your court case, or
+          * You need more time to file an Answer in your court case, and
           * You need more time to respond to something the other party filed in your case.      
-      - I need the judge to do something else in my court case.: Something else  
+      - I want the judge to do something else in my court case.: Something else  
+        help: |
+          Examples include:
+          
+          * You want the judge to force the other party to complete your discovery request, also called a **Motion to Compel Discovery**, 
+          * You want to change something you already filed in this case, also called a **Motion to Amend**, and
+          * You want the judge to dismiss a case against you becuase it has no basis in law or fact, also called a **Motion to Dismiss**.
 ---  
 
 # additional motion to continue or extend time questions and logic here
   
 ---  
-id: motion summary
+id: motion title
 question: |
-  Motion summary
+  Motion title
 subquestion: |
   In a few words, explain what you want the judge to do in this court case.
+  
+  ${ collapse_template(motion_title_help) }
+
 fields:
-  - Motion summary: motion_summary
-    maxlength: 60
+  - Motion for: motion_summary
+    maxlength: 70
+---    
+template: motion_title_help
+subject: |
+  **Can I see some examples?**
+content: |  
+  Examples include:
+  
+    * If you want the judge to force the other party to complete your discovery request, you could ask to Compel Discovery. 
+    * If you want to change something you already filed in this case, you could ask to Amend the document.
+    * If you want the judge to dismiss a case against you becuase it has no basis in law or fact, you could ask to Dismiss the case.
+
 ---
 id: motion body
 question: |
   What do you want the judge to do?
 subquestion: |
-  Explain what you want the judge to do in your court case. Be sure to state why it should be done.
+  Tips:  
+  
+  * Start each statement with a number,   
+  * Clearly say what you want the judge to do in your court case, and
+  * Explain why the judge should do it. Be sure to include facts and laws, if known, that support your motion.
+  
+  ${ collapse_template(motion_body_help) }
   
   The motion has room for about 34 lines of text. If you need more room to explain, you can add a second page. You can preview it on the next screen.
 fields:
-  - Motion: motion_body
+  - no label: motion_body
     input type: area
     rows: 15
-
+    maxlength: 2000
+---    
+template: motion_body_help
+subject: |
+  **Can I see an example?**
+content: |  
+  Let's say you want the judge to force, or compel, the other party in this case to respond to your discovery request. You could write something like this:
+  
+    1. On January 10, 2022, I sent the Plaintiff, James Jones, a Request for Documents. 
+    2. I did not receive documents from Plaintiff. On March 4, 2022, I asked Mr. James Jones to respond to the Request for Documents.
+    3. On March 23, 2022, I still did not get a response from the Plaintiff.
+    4. I want the court to compel Plaintiff James Jones to respond to the Request for Documents by April 15, 2023.
 ---
 id: preview motion
 continue button field: preview_motion
@@ -584,7 +621,7 @@ subquestion: |
   
   **Note: this is not a complete form.** Finish the program to get all your forms.
   
-  ${ pdf_concatenate(motion_attachment['preview'], filename="motion-preview.pdf") }
+  ${ pdf_concatenate(motion_attachment['preview'], filename="motion-preview.pdf").extract_pages(last=1) }
   
   **Note: this is not a complete form.** Finish the program to get all your forms.
 ---
@@ -602,31 +639,40 @@ question: |
   More motion text
 subquestion: |
   Enter the second page of your motion.
+
+  Tips:  
   
+  * Start each statement with a number,   
+  * Clearly say what you want the judge to do in your court case, and
+  * Explain why the judge should do it. Be sure to include facts and laws, if known, that support your motion.
+  
+  ${ collapse_template(motion_body_help) }
+
   The additional motion page has room for about 36 lines of text. You can preview both pages of the motion on the next screen.
 fields:
-  - Motion: additional_motion_body
+  - no label: additional_motion_body
     input type: area
     rows: 15
+    maxlength: 2500
 ---
 id: preview additional motion
 continue button field: preview_additional_motion
 reconsider:
   - additional_motion_attachment['preview']
 question: |
-  Additional motion preview
+  Motion and Additional Motion preview
 subquestion: |
   Click the below image to preview your Motion and Additional Motion.
-  
+
+  **Be sure all of your text fits on the Motion and Additional Motion forms.**
+
   If this looks good, click **Next**.
   
   If you want to make changes, click **Back** or go to the [**Motion details**](${ url_action('section_motion') }) section.
   
-  If you want to add another page, you can enter more text.
-  
   **Note: this is not a complete form.** Finish the program to get all your forms.
  
-  ${ pdf_concatenate(motion_attachment['preview'], additional_motion_attachment['preview'], filename="motion-preview.pdf") }
+  ${ pdf_concatenate(motion_attachment['preview'].extract_pages(last=1), additional_motion_attachment['preview'], filename="motion-preview.pdf") }
 
   **Note: this is not a complete form.** Finish the program to get all your forms.
 ---
@@ -1024,7 +1070,7 @@ subquestion: |
   
   **Note: this is not a complete form.** Finish the program to get all your forms.
  
-  ${ pdf_concatenate(motion_continue_attachment['preview'], filename="motion-continue-preview.pdf") }
+  ${ pdf_concatenate(motion_continue_attachment['preview'], filename="motion-continue-preview.pdf").extract_pages(last=2) }
 
   **Note: this is not a complete form.** Finish the program to get all your forms.
 ---
@@ -2134,7 +2180,7 @@ review:
       ${ motion_type }
   - Edit: motion_summary
     button: |
-      **Motion summary:**
+      **Motion title:**
       ${ motion_summary }
     show if: motion_type == "Something else"
   - Edit: motion_body
@@ -2488,7 +2534,7 @@ review:
       ${ motion_type }
   - Edit: motion_summary
     button: |
-      **Motion summary:**
+      **Motion title:**
       ${ motion_summary }
     show if: motion_type == "Something else"
   - Edit: motion_body
