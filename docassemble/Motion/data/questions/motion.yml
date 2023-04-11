@@ -530,21 +530,21 @@ fields:
         help: |
           Examples include:
     
-          * You will need to miss a court date due to a family medical emergency,
-          * You need more time to find a **witness** that you need for your case, and
+          * You will need to miss a court date due to a family medical emergency.
+          * You need more time to find a **witness** that you need for your case.
           * The **evidence** you need for your case won't be available on the scheduled court date.      
       - I want to extend the deadline to do something.: Extend a deadline  
         help: |
           Examples include:
     
-          * You need more time to file an Answer in your court case, and
+          * You need more time to file an Answer in your court case.
           * You need more time to respond to something the other party filed in your case.      
       - I want the judge to do something else in my court case.: Something else  
         help: |
           Examples include:
           
-          * You want the judge to force the other party to complete your discovery request, also called a **Motion to Compel Discovery**, 
-          * You want to change something you already filed in this case, also called a **Motion to Amend**, and
+          * You want the judge to order the other party to answer your discovery requests, also called a **Motion to Compel Discovery**. 
+          * You want to change something you already filed in this case, also called a **Motion to Amend**.
           * You want the judge to dismiss a case against you becuase it has no basis in law or fact, also called a **Motion to Dismiss**.
 ---  
 
@@ -560,7 +560,7 @@ subquestion: |
   ${ collapse_template(motion_title_help) }
 
 fields:
-  - Motion for: motion_summary
+  - Motion to:: motion_summary
     maxlength: 70
 ---    
 template: motion_title_help
@@ -569,7 +569,7 @@ subject: |
 content: |  
   Examples include:
   
-    * If you want the judge to force the other party to complete your discovery request, you could ask to Compel Discovery. 
+    * If you want the judge to order the other party to answer your discovery requests, you could ask to Compel Discovery. 
     * If you want to change something you already filed in this case, you could ask to Amend the document.
     * If you want the judge to dismiss a case against you becuase it has no basis in law or fact, you could ask to Dismiss the case.
 
@@ -581,8 +581,8 @@ subquestion: |
   Tips:  
   
   * Start each statement with a number,   
-  * Clearly say what you want the judge to do in your court case, and
-  * Explain why the judge should do it. Be sure to include facts and laws, if known, that support your motion.
+  * Explain why the judge should agree with what you are asking. Be sure to include facts and laws, if known, that support your motion, and
+  * At the end, clearly say what you want the judge to do in your court case.
   
   ${ collapse_template(motion_body_help) }
   
@@ -597,11 +597,11 @@ template: motion_body_help
 subject: |
   **Can I see an example?**
 content: |  
-  Let's say you want the judge to force, or compel, the other party in this case to respond to your discovery request. You could write something like this:
+  Let's say you want the judge to force, or compel, the other party in this case to respond to your discovery requests. You could write something like this:
   
-    1. On January 10, 2022, I sent the Plaintiff, James Jones, a Request for Documents. 
-    2. I did not receive documents from Plaintiff. On March 4, 2022, I asked Mr. James Jones to respond to the Request for Documents.
-    3. On March 23, 2022, I still did not get a response from the Plaintiff.
+    1. On January 10, 2023, I sent the Plaintiff, James Jones, a Request for Documents. 
+    2. I did not receive documents from the Plaintiff. On March 4, 2023, I asked Mr. James Jones to respond to the Request for Documents.
+    3. As of March 23, 2023, I still did not get a response from the Plaintiff.
     4. I want the court to compel Plaintiff James Jones to respond to the Request for Documents by April 15, 2023.
 ---
 id: preview motion
@@ -643,8 +643,8 @@ subquestion: |
   Tips:  
   
   * Start each statement with a number,   
-  * Clearly say what you want the judge to do in your court case, and
-  * Explain why the judge should do it. Be sure to include facts and laws, if known, that support your motion.
+  * Explain why the judge should agree with what you are asking. Be sure to include facts and laws, if known, that support your motion, and
+  * At the end, clearly say what you want the judge to do in your court case.
   
   ${ collapse_template(motion_body_help) }
 
