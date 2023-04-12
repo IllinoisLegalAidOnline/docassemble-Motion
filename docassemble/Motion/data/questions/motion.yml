@@ -20,6 +20,7 @@ objects:
   - delivery_parties: ALPeopleList.using(there_are_any=True)
   - delivery_parties[i].lawyer: ALIndividual
   - court_list: ALCourtLoader.using(file_name='docassemble.ILAO:data/sources/il_courts.xlsx')
+  - watermark: DAStaticFile.using(filename="preview_watermark_text.png")
 ---
 code: |
   al_form_type = 'existing_case'
@@ -1624,7 +1625,7 @@ attachment:
       - "trial_court_county": ${ trial_court.address.county.upper() }
       - "plaintiffs": ${ users.full_names() if party_label == "plaintiff" or party_label == "petitioner" else other_parties.full_names()}
       - "defendants": ${list_defendants(users.full_names(), other_parties.full_names(), anyone_opposing, party_label)}
-
+      - "preview_watermark": ${ watermark if i=='preview' else '' }
       - "user__1": ${ users[0].name.full(middle="full") }
       - "user__2": ${ users[0].name.full(middle="full") }
       - "user__3": ${ users[0].name.full(middle="full") }
@@ -1714,6 +1715,7 @@ attachment:
       - "trial_court_county": ${ trial_court.address.county.upper() }
       - "plaintiffs": ${ users.full_names() if party_label == "plaintiff" or party_label == "petitioner" else other_parties.full_names()}
       - "defendants": ${list_defendants(users.full_names(), other_parties.full_names(), anyone_opposing, party_label)}
+      - "preview_watermark": ${ watermark if i=='preview' else '' }
       
       - "case_number__1": ${ case_number }
       - "motion_summary": ${ motion_summary }
