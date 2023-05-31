@@ -172,7 +172,7 @@ subquestion: |
 
   A motion is a request to the judge to make the court or a party in the case do something. This program makes a *Motion* or a *Motion to Continue or Extend Time* based on what you need.
   
-  To learn more, read about [**preparing, filing, and presenting motions in court**](https://www.illinoislegalaid.org/node/32286).
+  To learn more, read ILAO's article about [**preparing, filing, and presenting motions in court**](https://www.illinoislegalaid.org/node/32286).
 field: sees_nav_bar
 ---
 id: instructions
@@ -556,7 +556,7 @@ id: motion title
 question: |
   Motion title
 subquestion: |
-  In a few words, explain what you want the judge to do in this court case.
+  In a few words, explain what you want the judge to do in this court case. The motion form has room for about 70 characters.
   
   ${ collapse_template(motion_title_help) }
 
@@ -570,9 +570,9 @@ subject: |
 content: |  
   Examples include:
   
-    * If you want the judge to order the other party to answer your discovery requests, you could ask to Compel Discovery. 
-    * If you want to change something you already filed in this case, you could ask to Amend the document.
-    * If you want the judge to dismiss a case against you becuase it has no basis in law or fact, you could ask to Dismiss the case.
+    * If you want the judge to order the other party to answer your discovery requests, you could ask to: Compel Discovery. 
+    * If you want to change something you already filed in this case, you could ask to: Amend the document.
+    * If you want the judge to dismiss a case against you becuase it has no basis in law or fact, you could ask to: Dismiss the case.
 
 ---
 id: motion body
@@ -587,7 +587,7 @@ subquestion: |
   
   ${ collapse_template(motion_body_help) }
   
-  The motion has room for about 34 lines of text. If you need more room to explain, you can add a second page. You can preview it on the next screen.
+  The motion has room for about 34 lines of text, or about 2,000 characters. If you need more room to explain, you can add a second page. You can preview it on the next screen.
 fields:
   - no label: motion_body
     input type: area
@@ -623,8 +623,6 @@ subquestion: |
   **Note: this is not a complete form.** Finish the program to get all your forms.
   
   ${ pdf_concatenate(motion_attachment['preview'], filename="motion-preview.pdf").extract_pages(last=1) }
-  
-  **Note: this is not a complete form.** Finish the program to get all your forms.
 ---
 id: add additional motion page
 question: |
@@ -649,7 +647,7 @@ subquestion: |
   
   ${ collapse_template(motion_body_help) }
 
-  The additional motion page has room for about 36 lines of text. You can preview both pages of the motion on the next screen.
+  The additional motion page has room for about 36 lines of text, or about 2,500 characters. You can preview both pages of the motion on the next screen.
 fields:
   - no label: additional_motion_body
     input type: area
@@ -674,8 +672,6 @@ subquestion: |
   **Note: this is not a complete form.** Finish the program to get all your forms.
  
   ${ pdf_concatenate(motion_attachment['preview'].extract_pages(last=1), additional_motion_attachment['preview'], filename="motion-preview.pdf") }
-
-  **Note: this is not a complete form.** Finish the program to get all your forms.
 ---
 id: original court date
 question: |
@@ -788,11 +784,12 @@ id: continuance reason
 question: |
   Why do you need to reschedule?
 subquestion: |
-  The motion to continue has room for about 15 lines of text. You can preview it on the next screen.
+  The motion to continue has room for about 15 lines of text, or about 1,000 characters. You can preview it on the next screen.
 fields:
   - I need to reschedule because:: continue_reason_text
     input type: area
     rows: 10
+    maxlength: 1000
 
 ---
 sets:
@@ -1047,7 +1044,7 @@ question: |
 subquestion: |
   Explain how the new deadline will let you "${ unfinished_task }" by ${ new_deadline }.
 
-  The motion to extend time has room for about 5 lines of text. You can preview it on the next screen.
+  The motion to extend time has room for about 5 lines of text, or about 350 characters. You can preview it on the next screen.
 fields:
   - I need more time because: extension_reason
     input type: area
@@ -1072,8 +1069,6 @@ subquestion: |
   **Note: this is not a complete form.** Finish the program to get all your forms.
  
   ${ pdf_concatenate(motion_continue_attachment['preview'], filename="motion-continue-preview.pdf").extract_pages(last=2) }
-
-  **Note: this is not a complete form.** Finish the program to get all your forms.
 ---
 id: phone number
 question: |
@@ -1580,7 +1575,7 @@ code: |
 
 ---
 objects:
-  - al_user_bundle: ALDocumentBundle.using(elements=[motion_instructions, motion_continue_instructions, motion_single_pdf_bundle, motion_continue_single_pdf_bundle, motion_additional_delivery_blank, notice_single_pdf_bundle, motion_order, motion_continue_order], filename="motion.pdf", title="Download all forms")
+  - al_user_bundle: ALDocumentBundle.using(elements=[motion_instructions, motion_continue_instructions, motion_single_pdf_bundle, motion_continue_single_pdf_bundle, motion_additional_delivery_blank, notice_single_pdf_bundle, motion_order, motion_continue_order], filename="motion.pdf", title="All forms")
   - al_court_bundle: ALDocumentBundle.using(elements=[motion_single_pdf_bundle, motion_continue_single_pdf_bundle, notice_single_pdf_bundle, motion_order, motion_continue_order], filename="motion.pdf", title="Motion")
 ---
 objects:
@@ -2080,6 +2075,9 @@ attachment:
       - "plaintiffs": ${ users.full_names() if party_label == "plaintiff" or party_label == "petitioner" else other_parties.full_names()}
       - "defendants": ${list_defendants(users.full_names(), other_parties.full_names(), anyone_opposing, party_label)}
       - "case_number__1": ${ case_number }
+      - "motion_by_plaintiff": ${ party_label == "plaintiff" or party_label == "petitioner" }
+      - "motion_by_defendant": ${ party_label == "defendant" or party_label == "respondent" }
+      - "motion_summary": ${ motion_summary }
 ---
 attachment:
   variable name: motion_continue_order[i]
@@ -2094,8 +2092,10 @@ attachment:
       - "plaintiffs": ${ users.full_names() if party_label == "plaintiff" or party_label == "petitioner" else other_parties.full_names()}
       - "defendants": ${list_defendants(users.full_names(), other_parties.full_names(), anyone_opposing, party_label)}
       - "case_number__1": ${ case_number }
-
-
+      - "motion_by_plaintiff": ${ party_label == "plaintiff" or party_label == "petitioner" }
+      - "motion_by_defendant": ${ party_label == "defendant" or party_label == "respondent" }
+      - "continue_cb": ${ motion_type == "Reschedule a court date"}
+      - "extend_cb": ${ motion_type == "Extend a deadline"}
 
 ---
 ############### Review page
