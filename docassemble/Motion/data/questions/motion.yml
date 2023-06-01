@@ -20,6 +20,9 @@ objects:
   - delivery_parties: ALPeopleList.using(there_are_any=True)
   - delivery_parties[i].lawyer: ALIndividual
   - court_list: ALCourtLoader.using(file_name='docassemble.ILAO:data/sources/il_courts.xlsx')
+---
+mandatory: True
+objects:
   - watermark: DAStaticFile.using(filename="preview_watermark_text.png")
 ---
 code: |
