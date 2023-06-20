@@ -591,12 +591,12 @@ subquestion: |
   
   ${ collapse_template(motion_body_help) }
   
-  The motion has room for about 34 lines of text, or about 2,000 characters. If you need more room to explain, you can add a second page. You can preview it on the next screen.
+  The motion has room for about 24 lines of text, or about 2,250 characters. If you need more room to explain, you can add a second page. You can preview it on the next screen.
 fields:
   - no label: motion_body
     input type: area
     rows: 15
-    maxlength: 2000
+    maxlength: 2250
 ---    
 template: motion_body_help
 subject: |
@@ -1585,7 +1585,7 @@ objects:
 objects:
   - motion_single_pdf_bundle: ALDocumentBundle.using(elements=[motion_attachment, additional_motion_attachment, motion_additional_delivery, motion_additional_delivery_2, motion_additional_delivery_3], filename="motion.pdf", title="Motion")
   - motion_continue_single_pdf_bundle: ALDocumentBundle.using(elements=[motion_continue_attachment, motion_additional_delivery, motion_additional_delivery_2, motion_additional_delivery_3], filename="motion.pdf", title="Motion to Continue or Extend Time")
-  - notice_single_pdf_bundle: ALDocumentBundle.using(elements=[notice_attachment, additional_motion_attachment, motion_additional_delivery, motion_additional_delivery_2, motion_additional_delivery_3], filename="notice.pdf", title="Notice of Court Date for Motion")
+  - notice_single_pdf_bundle: ALDocumentBundle.using(elements=[notice_attachment, motion_additional_delivery, motion_additional_delivery_2, motion_additional_delivery_3], filename="notice.pdf", title="Notice of Court Date for Motion")
 ---
 #code: |
 #  motion_attachment.overflow_fields['motion_body'].overflow_trigger = 1280
