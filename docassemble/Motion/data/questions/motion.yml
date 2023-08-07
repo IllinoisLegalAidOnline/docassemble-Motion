@@ -71,7 +71,10 @@ code: |
   set_progress(25)
   if in_re_check == True:
     in_re_label
-  trial_court_index
+  #trial_court_index
+  if trial_court_index == -1:
+    cook_district
+  courthouse_info
   case_number
   
   set_progress(30)
@@ -134,9 +137,9 @@ code: |
   if anyone_opposing == True or users.number() > 1:
 
     notice_intro
-    if trial_court_index == -1:
-      cook_district
-    courthouse_info
+    #if trial_court_index == -1:
+    #  cook_district
+    #courthouse_info
     if has_court_date:
       hearing_date
 
@@ -155,6 +158,11 @@ code: |
     for person in delivery_parties[:8]:
       if person.knows_delivery_method == False or person.hand_delivery == True:
         hand_delivery_info
+
+  #else:
+  #  if trial_court_index == -1:
+  #    cook_district
+    courthouse_info
 
   set_progress(75)
   nav.set_section('section_about_you')
@@ -1738,6 +1746,7 @@ attachment:
       - "trial_court_county": ${ trial_court.address.county.upper() }
       - "plaintiffs": ${ users.full_names() if party_label == "plaintiff" or party_label == "petitioner" else other_parties.full_names()}
       - "defendants": ${list_defendants(users.full_names(), other_parties.full_names(), anyone_opposing, party_label)}
+      - "preview_watermark": ${ watermark if i=='preview' else '' }
 
       - "user__1": ${ users[0].name.full(middle="full") }
       - "user__2": ${ users[0].name.full(middle="full") }
@@ -1767,7 +1776,7 @@ attachment:
       - "court_date_original": ${ reschedule_date  if motion_type == "Reschedule a court date" else ''}
       - "court_time_original": ${ format_time(reschedule_time, format='h:mm') if motion_type == "Reschedule a court date" else ''}
       - "court_time_original_am": ${ True if format_time(reschedule_time, format='a')=='AM' and motion_type == "Reschedule a court date" else '' }
-      - "court_time_orginal_pm": ${ True if format_time(reschedule_time, format='a')=='PM' and motion_type == "Reschedule a court date" else '' }
+      - "court_time_original_pm": ${ True if format_time(reschedule_time, format='a')=='PM' and motion_type == "Reschedule a court date" else '' }
       - "continue_reason": ${ continue_reason if motion_type == "Reschedule a court date" else ''}            
       - "extend_cb": ${ motion_type == "Extend a deadline"}
       - "extend_task": ${ unfinished_task if motion_type == "Extend a deadline" else '' }
