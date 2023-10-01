@@ -792,7 +792,7 @@ subquestion: |
   ${ collapse_template(long_name_help) }
 fields:
   - code: |
-      witness.name_fields(person_or_business='unsure')
+      witness.name_fields(person_or_business='person')
 ---
 id: know witness address
 question: |
@@ -1854,7 +1854,7 @@ attachment:
 
       - "evidence_type_witness": ${ True if continue_reason_type == "Witness unavailable" else '' }
       - "witness_name": ${ witness.name.full(middle="full") if continue_reason_type == "Witness unavailable" else '' }
-      - "witness_address": ${ witness.address.line_one(bare=True) if (continue_reason_type == "Witness unavailable" and know_witness_address == True) else '' }
+      - "witness_address": ${ witness.address.on_one_line(bare=True) if (continue_reason_type == "Witness unavailable" and know_witness_address == True) else '' }
       - "witness_location_unknown": ${ True if (continue_reason_type == "Witness unavailable" and know_witness_address == False) else ''}
       - "find_witness_effort": ${ find_witness_effort if (continue_reason_type == "Witness unavailable" and no_witness_reason == "location") else '' }
       - "witness_unavailable": ${ True if (continue_reason_type == "Witness unavailable" and no_witness_reason == "unavailable" ) else ''}
