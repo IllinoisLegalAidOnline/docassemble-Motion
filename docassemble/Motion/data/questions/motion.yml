@@ -290,7 +290,7 @@ choices:
 ---
 template: which_party
 subject: |
-  **How do I figure out my party label?**
+  **Learn more about party labels**
 content: |
   If you filed a new case, you are either the Plaintiff or the Petitioner.
 
@@ -314,9 +314,11 @@ fields:
 ---
 template: other_users_help
 subject: |
-  **How do I know if there are others?**
+  **Learn about other ${ party_label }s**
 content: |  
   You said you are the ${ party_label.capitalize() }. The other people on your side of the case would be co-${ party_label}s.
+  
+  The other ${ party_label}s should be listed with you at the top of your court papers.
 ---
 id: any other party
 question: |
@@ -495,7 +497,7 @@ fields:
 ---
 template: case_number_help
 subject: |
-  **Where can I find this?**
+  **Learn about case numbers**
 content: |  
   The case number should be on your court papers. Look at the Complaint or Petition, or the Summons if you received one. It is usually in the top-right part of the first page.
   
@@ -592,8 +594,9 @@ content: |
 ---
 id: preview motion
 continue button field: preview_motion
-reconsider:
-  - motion_attachment['preview']
+# removed b/c using al documents will automatically reconsider upon assembly using .as_pdf
+#reconsider:
+#  - motion_attachment['preview']
 question: |
   Motion preview
 subquestion: |
@@ -606,8 +609,8 @@ subquestion: |
   If you want to add another page, you can enter more text.
   
   **Note: this is not a complete form.** Finish the program to get all your forms.
-  
-  ${ pdf_concatenate(motion_attachment['preview'], filename="motion-preview.pdf").extract_pages(last=1) }
+
+  ${ motion_attachment.as_pdf(key='preview').extract_pages(last=1) }
 ---
 id: add additional motion page
 question: |
@@ -641,8 +644,9 @@ fields:
 ---
 id: preview additional motion
 continue button field: preview_additional_motion
-reconsider:
-  - additional_motion_attachment['preview']
+# removed b/c using al documents will automatically reconsider upon assembly using .as_pdf
+#reconsider:
+#  - additional_motion_attachment['preview']
 question: |
   Motion and Additional Motion preview
 subquestion: |
@@ -775,12 +779,12 @@ id: continuance reason
 question: |
   Why do you need to reschedule?
 subquestion: |
-  The motion to continue has room for about 15 lines of text, or about 1,000 characters. You can preview it on the next screen.
+  The *Motion to Continue or Extend Time* has room for about 7 lines of text, or about 390 characters. You can preview it on the next screen.
 fields:
   - I need to reschedule because:: continue_reason_text
     input type: area
     rows: 10
-    maxlength: 1000
+    maxlength: 390
 
 ---
 sets:
@@ -837,7 +841,7 @@ fields:
   - Efforts to find ${ witness.name.full(middle="full") }: find_witness_effort
     input type: area
     rows: 3
-    maxlength: 150
+    maxlength: 195
 ---
 id: use due diligence
 question: |
@@ -896,6 +900,14 @@ question: |
   How did you try to get the evidence to court on ${ reschedule_date }?
   % endif
 subquestion: |
+  % if continue_reason_type == "Witness unavailable":
+  Show how you used **due diligence** when trying to get ${ witness.name.full(middle="full") } to testify on ${ reschedule_date }. Using "due diligence" means doing what is expected or reasonable.
+  % elif continue_reason_type == "Document unavailable":
+  Show how you used **due diligence** when trying to get the document to court on ${ reschedule_date }. Using "due diligence" means doing what is expected or reasonable.
+  % else:
+  Show how you used **due diligence** when trying to get the evidence to court on ${ reschedule_date }. Using "due diligence" means doing what is expected or reasonable.
+  % endif
+  
   Describe everything you did. If you need more time, explain why.
   % if continue_reason_type == "Witness unavailable" and no_witness_reason == "location":
 
@@ -905,7 +917,7 @@ fields:
   - Efforts: due_diligence_effort
     input type: area
     rows: 5
-    maxlength: 250
+    maxlength: 340
 ---
 #id: reschedule date
 #question: |
@@ -947,21 +959,21 @@ fields:
   - What the testimony will show: evidence_shows
     input type: area
     rows: 3
-    maxlength: 150
+    maxlength: 290
     show if:
       code: |
         continue_reason_type == "Witness unavailable"
   - What the document will show: evidence_shows
     input type: area
     rows: 3
-    maxlength: 150
+    maxlength: 290
     show if:
       code: |
         continue_reason_type == "Document unavailable"
   - What the evidence will show: evidence_shows
     input type: area
     rows: 3
-    maxlength: 150
+    maxlength: 290
     show if:
       code: |
         continue_reason_type == "Evidence unavailable"
@@ -979,6 +991,8 @@ subquestion: |
   You can explain what the document will help prove on another screen.
 fields:
   - Name or description of document:: document_description
+    input type: area
+    rows: 2
     maxlength: 60
 ---
 id: evidence description
@@ -992,7 +1006,7 @@ fields:
   - Description of the evidence:: evidence_description
     input type: area
     rows: 3
-    maxlength: 150
+    maxlength: 210
 ---
 # removed sep 2023 after aoic made statewide form to cover missing evidence or witness
 #depends on:
@@ -1034,13 +1048,17 @@ id: unfinished task
 question: |
   What do you need more time to do?
 subquestion: |
-  In a few words, explain what you need more time to do. On the next screens, you can explain:
+  In a few words, explain what you need more time to do.
+  
+  On the next screens, you can explain:
   
   * The current deadline,
   * The new deadline you want, and
   * Why you need more time.
 fields:
   - I need more time to:: unfinished_task
+    input type: area
+    rows: 2
     maxlength: 60
 ---
 id: current deadline
@@ -1065,12 +1083,12 @@ question: |
 subquestion: |
   Explain how the new deadline will let you "${ unfinished_task }" by ${ new_deadline }.
 
-  The motion to extend time has room for about 5 lines of text, or about 350 characters. You can preview it on the next screen.
+  The *Motion to Continue or Extend Time* has room for about 7 lines of text, or about 390 characters. You can preview it on the next screen.
 fields:
   - I need more time because: extension_reason
     input type: area
-    rows: 5
-    maxlength: 350
+    rows: 7
+    maxlength: 390
 ---
 id: preview motion to continue or extend
 continue button field: preview_continue_or_extend
@@ -1079,7 +1097,7 @@ reconsider:
 question: |
   Motion to Continue or Extend Time preview
 subquestion: |
-  Click the below image to preview your Motion to Continue or Extend Time.
+  Click the below image to preview your *Motion to Continue or Extend Time*.
   
   If this looks good, click **Next**.
   
@@ -1087,10 +1105,10 @@ subquestion: |
   
   **Note: this is not a complete form.** Finish the program to get all your forms.
  
-  % if continue_reason_type == "Other" and motion_type == "Reschedule a court date":
-  ${ pdf_concatenate(motion_continue_attachment['preview'], filename="motion-continue-preview.pdf").extract_pages(last=1) }
+  % if motion_type == "Reschedule a court date" and continue_reason_type != "Other":
+  ${ pdf_concatenate(motion_continue_attachment.as_pdf(key='preview').extract_pages(last=1), statement_attachment.as_pdf(key='preview').extract_pages(last=2), filename="motion-continue-preview.pdf") }
   % else:
-  ${ pdf_concatenate(motion_continue_attachment['preview'].extract_pages(last=1), statement_attachment['preview'].extract_pages(last=2), filename="motion-continue-preview.pdf") }
+  ${ motion_continue_attachment.as_pdf(key='preview').extract_pages(last=1) }
   % endif  
 ---
 id: phone number
@@ -1126,9 +1144,13 @@ fields:
 ---
 id: e-signature
 question: |
+  % if motion_type == "Something else":
   Do you want to add your e-signature to your ${ form_name }?
+  % else:
+  Do you want to add your e-signature to your Motion to Continue or Extend Time?
+  % endif
 subquestion: |
-  If you do not add your **{e-signature}**, you must sign your paper form before you file and deliver it.
+  If you do not add your **{e-signature}**, you must sign your paper forms before you file and deliver them.
 
   ${ collapse_template(signature_help) }  
 fields:
@@ -1140,14 +1162,25 @@ terms:
 ---
 template: signature_help
 subject: |
-  **What does it mean to sign the *Motion*?**
+  **What does it mean to sign the forms?**
 content: |  
+  % if motion_type == "Something else":
   By signing your *Motion*, you are certifying that:
   
   * Everything on the form is true and correct, and
   * You understand that making a false statement on the form is perjury, which can result in criminal penalties.
   
   See the [**Code of Civil Procedure, 735 ILCS 5/1-109**](https://www.ilga.gov/legislation/ilcs/documents/073500050k1-109.htm), for more information.
+  % else:
+  By signing your *Motion to Continue or Extend Time*, you are certifying that:
+  
+  * You read the document,
+  * You believe it to be true and correct, and
+  * You are not filing it for an improper purpose, such as to cause delay.
+
+  See **[Illinois Supreme Court Rule 137](https://www.illinoiscourts.gov/supreme-court-rules)** for more information.
+  % endif  
+  
 ---
 id: notice intro
 continue button field: notice_intro
@@ -1541,7 +1574,7 @@ objects:
   - notice_attachment: ALDocument.using(title="Notice of Court Date for Motion", filename="notice_of_court_date.pdf", has_addendum=False)
   - motion_order: ALDocument.using(title="Order", filename="order.pdf", has_addendum=False)
   - motion_continue_instructions: ALDocument.using(title="Instructions", filename="instructions.pdf", has_addendum=False)
-  - motion_continue_attachment: ALDocument.using(title="Motion to Continue or Extend Time", filename="motion.pdf", has_addendum=False)
+  - motion_continue_attachment: ALDocument.using(title="Motion to Continue or Extend Time", filename="motion-to-continue.pdf", has_addendum=False)
   - statement_attachment: ALDocument.using(title="Statement of Missing Evidence or Witness", filename="statement.pdf", has_addendum=False)
   - motion_continue_order: ALDocument.using(title="Order", filename="order.pdf", has_addendum=False)
   
@@ -1599,7 +1632,7 @@ code: |
     motion_continue_single_pdf_bundle.enabled = False
   else:
     motion_continue_attachment.enabled = True
-    if continue_reason_type != "Other":
+    if motion_type == "Reschedule a court date" and continue_reason_type != "Other":
       statement_attachment.enabled = True
     motion_continue_instructions.enabled = True
     motion_continue_order.enabled = True 
@@ -1855,7 +1888,7 @@ attachment:
       - "evidence_type_witness": ${ True if continue_reason_type == "Witness unavailable" else '' }
       - "witness_name": ${ witness.name.full(middle="full") if continue_reason_type == "Witness unavailable" else '' }
       - "witness_address": ${ witness.address.on_one_line(bare=True) if (continue_reason_type == "Witness unavailable" and know_witness_address == True) else '' }
-      - "witness_location_unknown": ${ True if (continue_reason_type == "Witness unavailable" and know_witness_address == False) else ''}
+      - "witness_location_unknown": ${ True if continue_reason_type == "Witness unavailable" and (know_witness_address == False or no_witness_reason == "location") else ''}
       - "find_witness_effort": ${ find_witness_effort if (continue_reason_type == "Witness unavailable" and no_witness_reason == "location") else '' }
       - "witness_unavailable": ${ True if (continue_reason_type == "Witness unavailable" and no_witness_reason == "unavailable" ) else ''}
 
@@ -2281,7 +2314,7 @@ review:
     
   - Edit: continue_reason_type
     button: |
-      **Reschedule for witness, evidence, or other:**
+      **Reschedule for witness, document, evidence, or other:**
       ${ continue_reason_type }
     show if: (motion_type == "Reschedule a court date")
   - Edit: continue_reason_text
@@ -2305,32 +2338,48 @@ review:
       **Witness address:**
       ${ witness.address.on_one_line(bare=True) }    
     show if: (motion_type == "Reschedule a court date" and continue_reason_type == "Witness unavailable" and know_witness_address == True)
-  - Edit: due_diligence_effort
+  - Edit: no_witness_reason
     button: |
-      % if know_witness_address:
-      **How you used due diligence to get the witness:**
+      **Why ${ witness.name.full(middle="full") } can't make your court date?**
+      % if no_witness_reason == "location":
+      ${ "I cannot find the witness." }
       % else:
-      **How you used due diligence to find the witness:**
-      % endif
-      ${ due_diligence_effort }    
+      ${ "The witness cannot come to court on that date." }
+      % endif          
     show if: (motion_type == "Reschedule a court date" and continue_reason_type == "Witness unavailable")
-    
+  - Edit: find_witness_effort
+    button: |
+      **What have you done to try to find the witness?**
+      ${ find_witness_effort }    
+    show if: (motion_type == "Reschedule a court date" and continue_reason_type == "Witness unavailable" and no_witness_reason == "location")
+  - Edit: document_description
+    button: |
+      **Your document:**
+      ${ document_description }    
+    show if: (motion_type == "Reschedule a court date" and continue_reason_type == "Document unavailable")
   - Edit: evidence_description
     button: |
       **Your evidence:**
       ${ evidence_description }    
     show if: (motion_type == "Reschedule a court date" and continue_reason_type == "Evidence unavailable")
-  - Edit: due_diligence_effort
-    button: |
-      **How you used due diligence to get the evidence:**
-      ${ due_diligence_effort }    
-    show if: (motion_type == "Reschedule a court date" and continue_reason_type == "Evidence unavailable")
+    
   - Edit: evidence_shows
     button: |
       **What the evidence will show:**
       ${ evidence_shows }    
-    show if: (motion_type == "Reschedule a court date" and continue_reason_type == "Evidence unavailable")
-    
+    show if: (motion_type == "Reschedule a court date" and continue_reason_type != "Other")
+  - Edit: due_diligence_effort
+    button: |
+      % if continue_reason_type == "Witness unavailable":
+      **How did you try to get ${ witness.name.full(middle="full") } to testify on ${ reschedule_date }?**
+      % elif continue_reason_type == "Document unavailable":
+      **How did you try to get the document to court on ${ reschedule_date }?**
+      % else:
+      **How did you try to get the evidence to court on ${ reschedule_date }?**
+      % endif
+      ${ due_diligence_effort }    
+    show if: (motion_type == "Reschedule a court date" and continue_reason_type != "Other")
+
   - Edit: unfinished_task
     button: |
       **What you need more time to do:**
@@ -2622,7 +2671,7 @@ review:
     
   - Edit: continue_reason_type
     button: |
-      **Reschedule for witness, evidence, or other:**
+      **Reschedule for witness, document, evidence, or other:**
       ${ continue_reason_type }
     show if: (motion_type == "Reschedule a court date")
   - Edit: continue_reason_text
@@ -2646,31 +2695,101 @@ review:
       **Witness address:**
       ${ witness.address.on_one_line(bare=True) }    
     show if: (motion_type == "Reschedule a court date" and continue_reason_type == "Witness unavailable" and know_witness_address == True)
-  - Edit: due_diligence_effort
+  - Edit: no_witness_reason
     button: |
-      % if know_witness_address:
-      **How you used due diligence to get the witness:**
+      **Why ${ witness.name.full(middle="full") } can't make your court date?**
+      % if no_witness_reason == "location":
+      ${ "I cannot find the witness." }
       % else:
-      **How you used due diligence to find the witness:**
-      % endif
-      ${ due_diligence_effort }    
+      ${ "The witness cannot come to court on that date." }
+      % endif          
     show if: (motion_type == "Reschedule a court date" and continue_reason_type == "Witness unavailable")
-    
+  - Edit: find_witness_effort
+    button: |
+      **What have you done to try to find the witness?**
+      ${ find_witness_effort }    
+    show if: (motion_type == "Reschedule a court date" and continue_reason_type == "Witness unavailable" and no_witness_reason == "location")
+  - Edit: document_description
+    button: |
+      **Your document:**
+      ${ document_description }    
+    show if: (motion_type == "Reschedule a court date" and continue_reason_type == "Document unavailable")
   - Edit: evidence_description
     button: |
       **Your evidence:**
       ${ evidence_description }    
     show if: (motion_type == "Reschedule a court date" and continue_reason_type == "Evidence unavailable")
-  - Edit: due_diligence_effort
-    button: |
-      **How you used due diligence to get the evidence:**
-      ${ due_diligence_effort }    
-    show if: (motion_type == "Reschedule a court date" and continue_reason_type == "Evidence unavailable")
+    
   - Edit: evidence_shows
     button: |
       **What the evidence will show:**
       ${ evidence_shows }    
-    show if: (motion_type == "Reschedule a court date" and continue_reason_type == "Evidence unavailable")
+    show if: (motion_type == "Reschedule a court date" and continue_reason_type != "Other")
+  - Edit: due_diligence_effort
+    button: |
+      % if continue_reason_type == "Witness unavailable":
+      **How did you try to get ${ witness.name.full(middle="full") } to testify on ${ reschedule_date }?**
+      % elif continue_reason_type == "Document unavailable":
+      **How did you try to get the document to court on ${ reschedule_date }?**
+      % else:
+      **How did you try to get the evidence to court on ${ reschedule_date }?**
+      % endif
+      ${ due_diligence_effort }    
+    show if: (motion_type == "Reschedule a court date" and continue_reason_type != "Other")
+    
+    
+# replaced with new questions for sep 2023 forms
+#  - Edit: continue_reason_type
+#    button: |
+#      **Reschedule for witness, evidence, or other:**
+#      ${ continue_reason_type }
+#    show if: (motion_type == "Reschedule a court date")
+#  - Edit: continue_reason_text
+#    button: |
+#      **You need to reschedule because:**
+#      ${ continue_reason_text }
+#    show if: (motion_type == "Reschedule a court date" and continue_reason_type == "Other")
+#
+#  - Edit: witness.name.first
+#    button: |
+#      **Your witness:**
+#      ${ witness.name.full(middle='full') }    
+#    show if: (motion_type == "Reschedule a court date" and continue_reason_type == "Witness unavailable")
+#  - Edit: know_witness_address
+#    button: |
+#      **Do you know the witness's address?**
+#      ${ word(yesno(know_witness_address)) }    
+#    show if: (motion_type == "Reschedule a court date" and continue_reason_type == "Witness unavailable")
+#  - Edit: witness.address.address
+#    button: |
+#      **Witness address:**
+#      ${ witness.address.on_one_line(bare=True) }    
+#    show if: (motion_type == "Reschedule a court date" and continue_reason_type == "Witness unavailable" and know_witness_address == True)
+#  - Edit: due_diligence_effort
+#    button: |
+#      % if know_witness_address:
+#      **How you used due diligence to get the witness:**
+#      % else:
+#      **How you used due diligence to find the witness:**
+#      % endif
+#      ${ due_diligence_effort }    
+#    show if: (motion_type == "Reschedule a court date" and continue_reason_type == "Witness unavailable")
+#    
+#  - Edit: evidence_description
+#    button: |
+#      **Your evidence:**
+#      ${ evidence_description }    
+#    show if: (motion_type == "Reschedule a court date" and continue_reason_type == "Evidence unavailable")
+#  - Edit: due_diligence_effort
+#    button: |
+#      **How you used due diligence to get the evidence:**
+#      ${ due_diligence_effort }    
+#    show if: (motion_type == "Reschedule a court date" and continue_reason_type == "Evidence unavailable")
+#  - Edit: evidence_shows
+#    button: |
+#      **What the evidence will show:**
+#      ${ evidence_shows }    
+#    show if: (motion_type == "Reschedule a court date" and continue_reason_type == "Evidence unavailable")
     
   - Edit: unfinished_task
     button: |
