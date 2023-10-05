@@ -96,21 +96,23 @@ code: |
     court_date_reason
     if continue_reason_type == "Other":
       continue_reason_text
-    elif continue_reason_type == "Witness unavailable":
-      witness.name.first
-      if know_witness_address:
-        witness.address.address
-      if no_witness_reason == "location":
-        find_witness_effort
-    elif continue_reason_type == "Document unavailable":
-      document_description
     else:
-      evidence_description
-    evidence_shows
-    due_diligence_effort
-      #witness_testimony
-      #available_date
-      #continue_reason_string_built
+      if continue_reason_type == "Witness unavailable":
+        witness.name.first
+        if know_witness_address:
+          witness.address.address
+        if no_witness_reason == "location":
+          find_witness_effort
+      elif continue_reason_type == "Document unavailable":
+        document_description
+      else:
+        evidence_description
+      evidence_shows
+      due_diligence_effort
+
+    #witness_testimony
+    #available_date
+    #continue_reason_string_built
     #else:
     #  evidence_description
     #  if used_due_diligence:
@@ -120,6 +122,7 @@ code: |
     #  evidence_shows
     #  available_date
     #  continue_reason_string_built
+    
     preview_continue_or_extend
   else:
     unfinished_task
