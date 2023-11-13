@@ -536,7 +536,7 @@ fields:
           
           * You want the judge to order the other party to answer your discovery requests, also called a **Motion to Compel Discovery**. 
           * You want to change something you already filed in this case, also called a **Motion to Amend**.
-          * You want the judge to dismiss a case against you becuase it has no basis in law or fact, also called a **Motion to Dismiss**.
+          * You want the judge to dismiss a case against you because it has no basis in law or fact, also called a **Motion to Dismiss**.
 ---  
 
 # additional motion to continue or extend time questions and logic here
@@ -562,7 +562,7 @@ content: |
   
     * If you want the judge to order the other party to answer your discovery requests, you could ask to: Compel Discovery. 
     * If you want to change something you already filed in this case, you could ask to: Amend the document.
-    * If you want the judge to dismiss a case against you becuase it has no basis in law or fact, you could ask to: Dismiss the case.
+    * If you want the judge to dismiss a case against you because it has no basis in law or fact, you could ask to: Dismiss the case.
 
 ---
 id: motion body
@@ -1153,7 +1153,9 @@ question: |
   Do you want to add your e-signature to your Motion to Continue or Extend Time?
   % endif
 subquestion: |
-  If you do not add your **{e-signature}**, you must sign your paper forms before you file and deliver them.
+  This program can put “**/s/ ${users[0].name.full(middle='full')}**” where you would sign your name. The court will accept this as your signature.
+
+  If you do not add your **{e-signature}** now, you must sign your paper forms before you file and deliver them.
 
   ${ collapse_template(signature_help) }  
 fields:
