@@ -48,6 +48,7 @@ mandatory: True
 code: |
   nav.set_section('section_intro')
   sees_nav_bar
+  snapshot_start
   how_to_use
   set_progress(5)
   whats_next
@@ -180,7 +181,39 @@ code: |
 
   set_progress(100)
   nav.set_section('section_download')
+  forms_assembling
+  snapshot_forms
   get_docs_screen
+---
+code: |
+  stuff_to_snapshot = {
+  	'start_time': str(current_datetime().format_datetime()),
+  	'started_interview': True, 
+  	}
+
+  try:
+    stuff_to_snapshot['ip_address'] = device(ip=True)
+  except:
+    pass
+
+  stuff_to_snapshot['zip'] = showifdef('users[0].address.zip')
+
+  stuff_to_snapshot['motion_type'] = showifdef('motion_type')
+
+  stuff_to_snapshot['downloaded_forms'] = showifdef('forms_assembling')
+  
+  store_variables_snapshot(
+  	data=stuff_to_snapshot, persistent=True
+  	)
+  snapshot_interview_state = True
+---
+code: |
+  snapshot_interview_state
+  snapshot_start = True  
+---
+code: |
+  reconsider('snapshot_interview_state')
+  snapshot_forms = True
 ---
 id: welcome
 question: |
@@ -469,7 +502,7 @@ id: in re check
 question: |
  Does the court case have the words "**In re:**" in the name?
 subquestion: |
-  Look at the name of the case at the top of the court papers. “In re” is often used in probate, bankruptcy, and some family law cases. For example, a probate case regarding Jane Doe’s estate might be called “In re: Estate of Jane Doe.”
+  Look at the name of the case at the top of the court papers. "In re" is often used in probate, guardianship, and some family law cases. For example, a probate case regarding Jane Doe’s estate might be called "In re: Estate of Jane Doe."
 fields:
   - no label: in_re_check
     datatype: yesnoradio
@@ -1292,7 +1325,7 @@ subquestion: |
 
   You must send a copy of your ${ form_name } to each of them.
 
-  If someone in the case has a lawyer, you must send it to the lawyer.
+  If someone in the case has a lawyer, send it to their lawyer.
 ---
 id: has lawyer
 generic object: ALIndividual
@@ -1526,6 +1559,17 @@ subquestion: |
   * If a party in your case does not have a lawyer, you can hand-deliver the forms to them or to a family member who is 13 or older at their home.
   * If they do have a lawyer, you can hand-deliver the forms to the lawyer or to the lawyer's office.
 
+---
+id: forms assembling
+continue button field: forms_assembling
+question: |
+  Almost done
+subquestion: |
+  After you click **Next**, it may take a few moments to finish making your forms.
+  
+  ###### You do not need to refresh your screen. Hang in there!
+  
+  [NEWLINE]
 ---
 id: get docs screen
 event: get_docs_screen
@@ -2442,7 +2486,8 @@ review:
     show if: users[0].email_notice
 ---
 #needs: yes_no_unknown
-id: delivery party review
+id: delivery party review screen
+section: Notice and delivery
 continue button field: x.review_delivery
 generic object: ALIndividual
 question: |
@@ -2506,8 +2551,9 @@ review:
       ${ x.delivery_date } at ${ format_time(x.delivery_time, "h:mm a") }
     show if: x.knows_delivery_method
 ---
-id: users review
+id: users review screen
 continue button field: users.revisit
+section: Case info
 question: |
   Edit the ${ party_label }s
 subquestion: |
@@ -2525,8 +2571,9 @@ columns:
 delete buttons: True
 confirm: True
 ---
-id: other parties review
+id: other parties review screen
 continue button field: other_parties.revisit
+section: Case info
 question: |
   % if party_label == "plaintiff":
     Edit the defendants
