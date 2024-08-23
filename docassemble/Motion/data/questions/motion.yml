@@ -364,7 +364,18 @@ subquestion: |
 fields:
   - no label: anyone_opposing
     datatype: yesnoradio
-
+---
+id: user name
+sets:
+    - users[0].name.first
+    - users[0].name.last
+    - users[0].name.middle
+    - users[0].name.suffix
+question:  |
+  What is your name?
+fields:
+  - code: |
+      users[0].name_fields()
 ---
 depends on:
   - user_started_case
@@ -1529,7 +1540,6 @@ fields:
   - Date: x.delivery_date
     datatype: date
     required: False
-    min: ${ today().format("yyyy-MM-dd") }
     max: ${ today().plus(years=1) }
   - Time: x.delivery_time
     datatype: time
@@ -1598,7 +1608,7 @@ under: |
   % endif 
 
   &nbsp;
-  ${ action_button_html(interview_url(i="docassemble.ILAO:feedback.yml", easy_form_interview=ilao_easy_form_url, easy_form_title=ilao_easy_form_title, easy_form_page=user_info().question_id, easy_form_variable=user_info().variable, local=False,reset=1), label=':comment: Was this program helpful?', color="#181c36", size="md", new_window=True) }
+  ${ action_button_html(interview_url(i="docassemble.ILAO:feedback.yml", easy_form_interview=ilao_easy_form_url, easy_form_title=ilao_easy_form_title, easy_form_page=current_context().question_id, easy_form_variable=current_context().variable, local=False,reset=1), label=':comment: Was this program helpful?', color="#181c36", size="md", new_window=True) }
 ---
 generic object: ALDocumentBundle
 template: x.send_email_template
@@ -2789,59 +2799,6 @@ review:
       ${ due_diligence_effort }    
     show if: (motion_type == "Reschedule a court date" and continue_reason_type != "Other")
     
-    
-# replaced with new questions for sep 2023 forms
-#  - Edit: continue_reason_type
-#    button: |
-#      **Reschedule for witness, evidence, or other:**
-#      ${ continue_reason_type }
-#    show if: (motion_type == "Reschedule a court date")
-#  - Edit: continue_reason_text
-#    button: |
-#      **You need to reschedule because:**
-#      ${ continue_reason_text }
-#    show if: (motion_type == "Reschedule a court date" and continue_reason_type == "Other")
-#
-#  - Edit: witness.name.first
-#    button: |
-#      **Your witness:**
-#      ${ witness.name.full(middle='full') }    
-#    show if: (motion_type == "Reschedule a court date" and continue_reason_type == "Witness unavailable")
-#  - Edit: know_witness_address
-#    button: |
-#      **Do you know the witness's address?**
-#      ${ word(yesno(know_witness_address)) }    
-#    show if: (motion_type == "Reschedule a court date" and continue_reason_type == "Witness unavailable")
-#  - Edit: witness.address.address
-#    button: |
-#      **Witness address:**
-#      ${ witness.address.on_one_line(bare=True) }    
-#    show if: (motion_type == "Reschedule a court date" and continue_reason_type == "Witness unavailable" and know_witness_address == True)
-#  - Edit: due_diligence_effort
-#    button: |
-#      % if know_witness_address:
-#      **How you used due diligence to get the witness:**
-#      % else:
-#      **How you used due diligence to find the witness:**
-#      % endif
-#      ${ due_diligence_effort }    
-#    show if: (motion_type == "Reschedule a court date" and continue_reason_type == "Witness unavailable")
-#    
-#  - Edit: evidence_description
-#    button: |
-#      **Your evidence:**
-#      ${ evidence_description }    
-#    show if: (motion_type == "Reschedule a court date" and continue_reason_type == "Evidence unavailable")
-#  - Edit: due_diligence_effort
-#    button: |
-#      **How you used due diligence to get the evidence:**
-#      ${ due_diligence_effort }    
-#    show if: (motion_type == "Reschedule a court date" and continue_reason_type == "Evidence unavailable")
-#  - Edit: evidence_shows
-#    button: |
-#      **What the evidence will show:**
-#      ${ evidence_shows }    
-#    show if: (motion_type == "Reschedule a court date" and continue_reason_type == "Evidence unavailable")
     
   - Edit: unfinished_task
     button: |
