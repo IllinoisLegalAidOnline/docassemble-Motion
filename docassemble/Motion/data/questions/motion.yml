@@ -746,7 +746,7 @@ fields:
       - We will give the judge a status update.: Status
       - Something else or I'm not sure why there is a court date.: Something else
   - Other reason for court date: court_date_other_desc
-    maxlength: 40
+    maxlength: 45
     show if:
       variable: court_date_reason
       is: "Something else"
@@ -773,8 +773,8 @@ subquestion: |
 fields:
   - I need to reschedule because:: continue_reason_text
     input type: area
-    rows: 10
-    maxlength: 390
+    rows: 12
+    maxlength: 425
 
 ---
 sets:
@@ -904,10 +904,14 @@ subquestion: |
    Your motion will already say: ${ find_witness_effort }
   % endif
 fields:
-  - Efforts: due_diligence_effort
+  - What you did to get evidence or witness: due_diligence_effort
     input type: area
     rows: 5
-    maxlength: 340
+    maxlength: 300
+  - Why you need more time to get evidence or witness: why_not_enough_time
+    input type: area
+    rows: 4
+    maxlength: 250
 ---
 id: evidence summary
 question: |
@@ -921,22 +925,22 @@ question: |
 fields:
   - What the testimony will show: evidence_shows
     input type: area
-    rows: 3
-    maxlength: 290
+    rows: 4
+    maxlength: 310
     show if:
       code: |
         continue_reason_type == "Witness unavailable"
   - What the document will show: evidence_shows
     input type: area
-    rows: 3
-    maxlength: 290
+    rows: 4
+    maxlength: 310
     show if:
       code: |
         continue_reason_type == "Document unavailable"
   - What the evidence will show: evidence_shows
     input type: area
-    rows: 3
-    maxlength: 290
+    rows: 4
+    maxlength: 310
     show if:
       code: |
         continue_reason_type == "Evidence unavailable"
@@ -956,7 +960,7 @@ fields:
   - Name or description of document:: document_description
     input type: area
     rows: 2
-    maxlength: 60
+    maxlength: 70
 ---
 id: evidence description
 question: |
@@ -968,8 +972,8 @@ subquestion: |
 fields:
   - Description of the evidence:: evidence_description
     input type: area
-    rows: 3
-    maxlength: 210
+    rows: 4
+    maxlength: 250
 ---
 id: unfinished task
 question: |
@@ -986,7 +990,7 @@ fields:
   - I need more time to:: unfinished_task
     input type: area
     rows: 2
-    maxlength: 60
+    maxlength: 70
 ---
 id: current deadline
 question: |
@@ -1014,8 +1018,8 @@ subquestion: |
 fields:
   - I need more time because: extension_reason
     input type: area
-    rows: 7
-    maxlength: 390
+    rows: 12
+    maxlength: 425
 ---
 id: preview motion to continue or extend
 continue button field: preview_continue_or_extend
@@ -2003,6 +2007,7 @@ attachment:
       - "case_number__1": ${ case_number }
       - "case_number__2": ${ case_number }
       - "case_number__3": ${ case_number }
+      - "case_number__4": ${ case_number }
       - "e_sign_name__1": ${ users[0].name.full(middle="full") if e_signature else '' }
       - "e_sign_name__2": ${ users[0].name.full(middle="full") if e_signature else '' }
       - "is_email_notice_yes": ${ users[0].email_notice }
@@ -2131,7 +2136,7 @@ attachment:
       - "plaintiffs": ${ users.full_names() if party_label == "plaintiff" or party_label == "petitioner" else other_parties.full_names()}
       - "defendants": ${list_defendants(users.full_names(), other_parties.full_names(), anyone_opposing, party_label)}
       - "preview_watermark": ${ watermark if i=='preview' else '' }
-
+      - "preview_watermark__2": ${ watermark if i=='preview' else '' }
       - "user__1": ${ users[0].name.full(middle="full") }
       - "user__2": ${ users[0].name.full(middle="full") }
       - "user__3": ${ users[0].name.full(middle="full") }
@@ -2146,6 +2151,7 @@ attachment:
       - "case_number__1": ${ case_number }
       - "case_number__2": ${ case_number }
       - "case_number__3": ${ case_number }
+      - "case_number__4": ${ case_number }
       - "e_sign_name__1": ${ users[0].name.full(middle="full") if e_signature else '' }
       - "e_sign_name__2": ${ users[0].name.full(middle="full") if e_signature else '' }
       - "is_email_notice_yes": ${ users[0].email_notice }
@@ -2240,6 +2246,7 @@ attachment:
       - "evidence_type_witness": ${ True if continue_reason_type == "Witness unavailable" else '' }
       - "witness_name": ${ witness.name.full(middle="full") if continue_reason_type == "Witness unavailable" else '' }
       - "witness_address": ${ witness.address.on_one_line(bare=True) if (continue_reason_type == "Witness unavailable" and know_witness_address == True) else '' }
+      - "witness_address_known": ${ True if continue_reason_type == "Witness unavailable" and know_witness_address == True else ''}      
       - "witness_location_unknown": ${ True if continue_reason_type == "Witness unavailable" and (know_witness_address == False or (know_witness_address == True or no_witness_reason == "location")) else ''}
       - "find_witness_effort": ${ find_witness_effort if (continue_reason_type == "Witness unavailable" and no_witness_reason == "location") else '' }
       - "witness_unavailable": ${ True if (continue_reason_type == "Witness unavailable" and no_witness_reason == "unavailable" ) else ''}
@@ -2252,6 +2259,7 @@ attachment:
 
       - "evidence_shows": ${ evidence_shows }
       - "due_diligence_effort": ${ due_diligence_effort}
+      - "why_not_enough_time": ${ why_not_enough_time }
 
 ---
 attachment:
@@ -2530,6 +2538,7 @@ attachment:
       - "case_number__1": ${ case_number }
       - "case_number__2": ${ case_number }
       - "case_number__3": ${ case_number }
+      - "case_number__4": ${ case_number }
       - "e_sign_name__1": ${ users[0].name.full(middle="full") if e_signature else '' }
       - "e_sign_name__2": ${ users[0].name.full(middle="full") if e_signature else '' }
       - "is_email_notice_yes": ${ users[0].email_notice }
@@ -2539,7 +2548,9 @@ attachment:
       - "hearing_time": ${ format_time(hearing_time, format='h:mm') if (defined('hearing_time') and has_court_date) else '' }
       - "hearing_am_checkbox": ${ True if (has_court_date and format_time(hearing_time, format='a')=='AM') else '' }
       - "hearing_pm_checkbox": ${ True if (has_court_date and format_time(hearing_time, format='a')=='PM') else '' }
+      - "in_person_cb": ${ True }
       - "hearing_courtroom": ${ courtroom if has_court_date else '' }
+      - "hearing_courtroom__2": ${ courtroom if has_court_date else '' }
       - "courthouse_address": ${ courthouse_info }
       - "clerk_phone": ${ trial_court.phone }
       - "clerk_website": ${ trial_court.website }
@@ -2796,6 +2807,17 @@ review:
       % endif
       ${ due_diligence_effort }    
     show if: (motion_type == "Reschedule a court date" and continue_reason_type != "Other")
+  - Edit: why_not_enough_time
+    button: |
+      % if continue_reason_type == "Witness unavailable":
+      **Why you need more time to get missing witness:**
+      % elif continue_reason_type == "Document unavailable":
+      **Why you need more time to get missing document:**
+      % else:
+      **Why you need more time to get missing evicence:**
+      % endif
+      ${ why_not_enough_time }    
+    show if: (motion_type == "Reschedule a court date" and continue_reason_type != "Other")
 
   - Edit: unfinished_task
     button: |
@@ -2906,11 +2928,14 @@ review:
       % if x.email_delivery == True:
         * Email
       % endif
-      % if x.hand_delivery == True:
-        * Hand
-      % endif
       % if x.mail_delivery == True:
         * US mail or delivery company
+      % endif
+      % if x.hand_delivery == True:
+        * Hand delivery
+      % endif
+      % if x.jail_delivery == True:
+        * Mail from prison or jail
       % endif
     show if: x.knows_delivery_method
   - Edit: x.delivery_date
@@ -3156,7 +3181,17 @@ review:
       % endif
       ${ due_diligence_effort }    
     show if: (motion_type == "Reschedule a court date" and continue_reason_type != "Other")
-    
+  - Edit: why_not_enough_time
+    button: |
+      % if continue_reason_type == "Witness unavailable":
+      **Why you need more time to get missing witness:**
+      % elif continue_reason_type == "Document unavailable":
+      **Why you need more time to get missing document:**
+      % else:
+      **Why you need more time to get missing evicence:**
+      % endif
+      ${ why_not_enough_time }    
+    show if: (motion_type == "Reschedule a court date" and continue_reason_type != "Other")
     
   - Edit: unfinished_task
     button: |
