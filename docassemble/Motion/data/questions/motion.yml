@@ -769,12 +769,12 @@ id: continuance reason
 question: |
   Why do you need to reschedule?
 subquestion: |
-  The *Motion to Continue or Extend Time* has room for about 7 lines of text, or about 425 characters including spaces. You can preview it on the next screen.
+  The *Motion to Continue or Extend Time* has room for about 650 characters including spaces. You can preview it on the next screen.
 fields:
   - I need to reschedule because:: continue_reason_text
     input type: area
-    rows: 12
-    maxlength: 425
+    rows: 15
+    maxlength: 650
 
 ---
 sets:
@@ -1014,12 +1014,12 @@ question: |
 subquestion: |
   Explain how the new deadline will let you "${ unfinished_task }" by ${ new_deadline }.
 
-  The *Motion to Continue or Extend Time* has room for about 7 lines of text, or about 425 characters including spaces. You can preview it on the next screen.
+  The *Motion to Continue or Extend Time* has room for about 800 characters including spaces. You can preview it on the next screen.
 fields:
   - I need more time because: extension_reason
     input type: area
-    rows: 12
-    maxlength: 425
+    rows: 15
+    maxlength: 800
 ---
 id: preview motion to continue or extend
 continue button field: preview_continue_or_extend
@@ -1120,6 +1120,12 @@ subquestion: |
       <li>You are not filing it for an improper purpose.</li>
     </ul></p>
     <p>See the <a href="https://ilcourtsaudio.blob.core.windows.net/antilles-resources/resources/9ce1fce9-895f-463e-b87d-f9b7631f8fde/Rule%20137.pdf"><b>Illinois Supreme Court Rule 137</b></a> for more information.</p>
+    <p>By signing the Proof of Delivery section of your <i>Motion to Continue or Extend Time</i>, you are certifying that:</p>
+    <p><ul>
+      <li>Everything on the forms is true and correct, and</li>
+      <li>You understand that making a false statement on the form is perjury, which can result in criminal penalties.</li>
+    </ul></p>
+  <p>See the <a href="https://www.ilga.gov/legislation/ilcs/documents/073500050k1-109.htm"><b>Code of Civil Procedure, 735 ILCS 5/1-109</b></a> for more information.</p>
   </div>
   % endif
 fields:
@@ -2609,7 +2615,7 @@ attachment:
       - "case_number__4": ${ case_number }
       - "e_sign_name__1": ${ users[0].name.full(middle="full") if e_signature else '' }
       - "e_sign_name__2": ${ users[0].name.full(middle="full") if e_signature else '' }
-      - "motion_summary": ${ motion_summary }
+      - "motion_summary": ${ motion_summary if motion_type == "Something else" else "Continue (Reschedule) or Extend Time" }
 
       - "hearing_date": ${ hearing_date if (defined('hearing_date') and has_court_date) else '' }
       - "hearing_time": ${ format_time(hearing_time, format='h:mm') if (defined('hearing_time') and has_court_date) else '' }
