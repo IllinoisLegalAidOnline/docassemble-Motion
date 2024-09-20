@@ -103,7 +103,7 @@ code: |
         witness.name.first
         if know_witness_address:
           witness.address.address
-        if no_witness_reason == "location":
+        elif no_witness_reason == "location":
           find_witness_effort
       elif continue_reason_type == "Document unavailable":
         document_description
@@ -822,16 +822,14 @@ fields:
 ---
 id: find witness effort
 question: |
-  What have you done to try to find ${ witness.name.full(middle="full") }?
+  What have you done to try to find ${ witness.name.full(middle="full") }'s address?
 subquestion: |
-  Describe everything you did to find ${ witness.name.full(middle="full") }.
-  
-  If you do not know their address, explain what you have done to try to find it.
+  Describe everything you did to find ${ witness.name.full(middle="full") }'s address.
 fields:
-  - Efforts to find ${ witness.name.full(middle="full") }: find_witness_effort
+  - Efforts to find ${ witness.name.full(middle="full") }'s address: find_witness_effort
     input type: area
-    rows: 3
-    maxlength: 195
+    rows: 6
+    maxlength: 250
 ---
 id: use due diligence
 question: |
@@ -901,17 +899,17 @@ subquestion: |
   Describe everything you did. If you need more time, explain why.
   % if continue_reason_type == "Witness unavailable" and no_witness_reason == "location":
 
-   Your motion will already say: ${ find_witness_effort }
+   Your forms will already say: ${ find_witness_effort }
   % endif
 fields:
   - What you did to get evidence or witness: due_diligence_effort
     input type: area
-    rows: 5
-    maxlength: 300
+    rows: 9
+    maxlength: 350
   - Why you need more time to get evidence or witness: why_not_enough_time
     input type: area
-    rows: 4
-    maxlength: 250
+    rows: 9
+    maxlength: 350
 ---
 id: evidence summary
 question: |
@@ -925,22 +923,22 @@ question: |
 fields:
   - What the testimony will show: evidence_shows
     input type: area
-    rows: 4
-    maxlength: 310
+    rows: 12
+    maxlength: 500
     show if:
       code: |
         continue_reason_type == "Witness unavailable"
   - What the document will show: evidence_shows
     input type: area
-    rows: 4
-    maxlength: 310
+    rows: 12
+    maxlength: 500
     show if:
       code: |
         continue_reason_type == "Document unavailable"
   - What the evidence will show: evidence_shows
     input type: area
-    rows: 4
-    maxlength: 310
+    rows: 12
+    maxlength: 500
     show if:
       code: |
         continue_reason_type == "Evidence unavailable"
@@ -960,7 +958,7 @@ fields:
   - Name or description of document:: document_description
     input type: area
     rows: 2
-    maxlength: 70
+    maxlength: 80
 ---
 id: evidence description
 question: |
@@ -972,8 +970,8 @@ subquestion: |
 fields:
   - Description of the evidence:: evidence_description
     input type: area
-    rows: 4
-    maxlength: 250
+    rows: 9
+    maxlength: 350
 ---
 id: unfinished task
 question: |
@@ -1028,7 +1026,11 @@ reconsider:
 question: |
   Motion to Continue or Extend Time preview
 subquestion: |
+  % if motion_type == "Reschedule a court date" and continue_reason_type != "Other":
+  Click the below image to preview your *Motion to Continue or Extend Time* and *Statement of Missing Evidence or Witness*.
+  % else:
   Click the below image to preview your *Motion to Continue or Extend Time*.
+  % endif  
   
   If this looks good, click **Next**.
   
@@ -1036,8 +1038,12 @@ subquestion: |
   
   **Note: this is not a complete form.** Finish the program to get all your forms.
  
-  % if motion_type == "Reschedule a court date" and continue_reason_type != "Other":
-  ${ pdf_concatenate(motion_continue_attachment.as_pdf(key='preview').extract_pages(last=1), statement_attachment.as_pdf(key='preview').extract_pages(last=2), filename="motion-continue-preview.pdf") }
+  % if motion_type == "Reschedule a court date":
+  % if continue_reason_type == "Other":
+  ${ motion_continue_attachment.as_pdf(key='preview').extract_pages(first=2, last=2) }
+  % else:
+  ${ pdf_concatenate(motion_continue_attachment.as_pdf(key='preview').extract_pages(first=2, last=2), statement_attachment.as_pdf(key='preview').extract_pages(last=2), filename="motion-continue-preview.pdf") }
+  % endif  
   % else:
   ${ motion_continue_attachment.as_pdf(key='preview').extract_pages(last=1) }
   % endif  
@@ -1135,27 +1141,6 @@ terms:
   - "e-signature": |
       An e-signature is an electronic signature. It is a digital version of a signature that has the same effect as a hand-written signature. 
 ---
-#template: signature_help
-#subject: |
-#  **What does it mean to sign the forms?**
-#content: |  
-#  % if motion_type == "Something else":
-#  By signing your *Motion*, you are certifying that:
-#  
-#  * Everything on the form is true and correct, and
-#  * You understand that making a false statement on the form is perjury, which can result in criminal penalties.
-#  
-#  See the [**Code of Civil Procedure, 735 ILCS 5/1-109**](https://www.ilga.gov/legislation/ilcs/documents/073500050k1-109.htm), for more information.
-#  % else:
-#  By signing your *Motion to Continue or Extend Time*, you are certifying that:
-#  
-#  * You read the document,
-#  * You believe it to be true and correct, and
-#  * You are not filing it for an improper purpose, such as to cause delay.
-#
-#  See **[Illinois Supreme Court Rule 137](https://www.illinoiscourts.gov/supreme-court-rules)** for more information.
-#  % endif  
----
 id: notice intro
 continue button field: notice_intro
 question: |
@@ -1166,7 +1151,6 @@ subquestion: |
   You must tell them about your motion and when you will present it to the judge.
 
   If someone in the case has a lawyer, you must tell their lawyer.
-
 ---
 depends on:
   - trial_court_index
@@ -1217,7 +1201,9 @@ question: |
 subquestion: |
   In some counties, the circuit clerk can give you a hearing date before you file your motion. In other counties, you will get a hearing date when you file your motion. If you have this information now, you can add it to your forms.
   
-  If the clerk gives you the hearing date after you file your *Motion*, you can add it to your *Notice of Court Date for Motion* later.
+  If the clerk gives you the hearing date after you file your *Motion*, you can add it to your *Notice of Court Date for Motion* later. 
+  
+  **Note:** Be sure to add the hearing information to your *Notice of Court Date for Motion* before you send it to other parties in your case.
 fields:
   - "Know court date and time?": has_court_date
     datatype: yesnoradio
@@ -1226,16 +1212,35 @@ id: hearing info
 question: |
   Court hearing information
 subquestion: |
-  Enter the date, time, and courtroom information for the court hearing on your motion. If the clerk did not give you a courtroom yet, leave it blank. You can add it to the *Notice of Court Date for Motion* after you file your *Motion*.
+  Enter the date, time, and information for how to attend the court hearing. If the clerk did not give you this information yet, leave it blank. You can add it to the *Notice of Court Date for Motion* after you file your *Motion*.
+
+  Your court date could be in person, by phone or by video. If your court date is by phone or video, it is called a "Remote Appearance."
+  
+  **Note:** Be sure to add the hearing information to your *Notice of Court Date for Motion* before you send it to other parties in your case.
+
+  ${ collapse_template(hearing_info_help) }  
+
 fields:
-  - Date: hearing_date
+  - Hearing date: hearing_date
     datatype: date
     min: ${ today().format("yyyy-MM-dd") }
-  - Time: hearing_time
+  - Hearing time: hearing_time
     datatype: time
   - Courtroom: courtroom
     maxlength: 10
     required: False
+
+---
+template: hearing_info_help
+subject: |
+  **See where to put hearing information on your forms**
+content: |  
+  You can put information on how to attend court on the bottom of page 1 of your *Notice of Court Date for Motion*.
+
+  We will add the courthouse address to your forms. Call the Circuit Clerk or visit their website for more information. EXPAND THIS
+  
+  [FILE hearing_information.png, 100%, Part of Notice of Court Date for Motion form]
+
 ---
 reconsider: True
 code: |
@@ -2303,8 +2308,8 @@ attachment:
       - "witness_name": ${ witness.name.full(middle="full") if continue_reason_type == "Witness unavailable" else '' }
       - "witness_address": ${ witness.address.on_one_line(bare=True) if (continue_reason_type == "Witness unavailable" and know_witness_address == True) else '' }
       - "witness_address_known": ${ True if continue_reason_type == "Witness unavailable" and know_witness_address == True else ''}      
-      - "witness_location_unknown": ${ True if continue_reason_type == "Witness unavailable" and (know_witness_address == False or (know_witness_address == True or no_witness_reason == "location")) else ''}
-      - "find_witness_effort": ${ find_witness_effort if (continue_reason_type == "Witness unavailable" and no_witness_reason == "location") else '' }
+      - "witness_location_unknown": ${ True if continue_reason_type == "Witness unavailable" and know_witness_address == False else ''}
+      - "find_witness_effort": ${ find_witness_effort if (continue_reason_type == "Witness unavailable" and know_witness_address == False) else '' }
       - "witness_unavailable": ${ True if (continue_reason_type == "Witness unavailable" and no_witness_reason == "unavailable" ) else ''}
 
       - "evidence_type_document": ${ True if continue_reason_type == "Document unavailable" else '' }
@@ -2621,7 +2626,7 @@ attachment:
       - "hearing_time": ${ format_time(hearing_time, format='h:mm') if (defined('hearing_time') and has_court_date) else '' }
       - "hearing_am_checkbox": ${ True if (has_court_date and format_time(hearing_time, format='a')=='AM') else '' }
       - "hearing_pm_checkbox": ${ True if (has_court_date and format_time(hearing_time, format='a')=='PM') else '' }
-      - "in_person_cb": ${ True }
+      - "in_person_cb": ${ "" }
       - "hearing_courtroom": ${ courtroom if has_court_date else '' }
       - "hearing_courtroom__2": ${ courtroom if has_court_date else '' }
       - "courthouse_address": ${ courthouse_info }
@@ -2906,9 +2911,9 @@ review:
     show if: (motion_type == "Reschedule a court date" and continue_reason_type == "Witness unavailable")
   - Edit: find_witness_effort
     button: |
-      **What have you done to try to find the witness?**
+      **What have you done to try to find the witness's address?**
       ${ find_witness_effort }    
-    show if: (motion_type == "Reschedule a court date" and continue_reason_type == "Witness unavailable" and no_witness_reason == "location")
+    show if: (motion_type == "Reschedule a court date" and continue_reason_type == "Witness unavailable" and (know_witness_address == False or no_witness_reason == "unavailable"))
   - Edit: document_description
     button: |
       **Your document:**
@@ -3280,9 +3285,9 @@ review:
     show if: (motion_type == "Reschedule a court date" and continue_reason_type == "Witness unavailable")
   - Edit: find_witness_effort
     button: |
-      **What have you done to try to find the witness?**
+      **What have you done to try to find the witness's address?**
       ${ find_witness_effort }    
-    show if: (motion_type == "Reschedule a court date" and continue_reason_type == "Witness unavailable" and no_witness_reason == "location")
+    show if: motion_type == "Reschedule a court date" and continue_reason_type == "Witness unavailable" and know_witness_address == False
   - Edit: document_description
     button: |
       **Your document:**
