@@ -133,6 +133,7 @@ code: |
     notice_intro
     if has_court_date:
       hearing_date
+    attend_court
 
     delivery_intro
     for person in delivery_parties:
@@ -1210,25 +1211,64 @@ fields:
 ---
 id: hearing info
 question: |
-  Court hearing information
+  Court hearing date and time
 subquestion: |
-  Enter the date, time, and information for how to attend the court hearing. If the clerk did not give you this information yet, leave it blank. You can add it to the *Notice of Court Date for Motion* after you file your *Motion*.
+  Enter the date and time of the court hearing.
 
-  Your court date could be in person, by phone or by video. If your court date is by phone or video, it is called a "Remote Appearance."
-  
-  **Note:** Be sure to add the hearing information to your *Notice of Court Date for Motion* before you send it to other parties in your case.
+  If you do not have this information now, you can click **Back** and change your answer.
 
-  ${ collapse_template(hearing_info_help) }  
-
+  **Note:** Be sure to add the date and time to your *Notice of Court Date for Motion* before you send it to other parties in your case.
 fields:
   - Hearing date: hearing_date
     datatype: date
     min: ${ today().format("yyyy-MM-dd") }
   - Hearing time: hearing_time
     datatype: time
-  - Courtroom: courtroom
+---
+id: hearing appearance info
+question: |
+  How to attend the court hearing
+subquestion: |
+  Your court date could be in person, by phone, or by video. If your court date is by phone or video, it is called a "Remote Appearance."
+  
+  Enter how to attend the court hearing below. If the clerk did not give you this information yet, leave it blank. You can add it to the *Notice of Court Date for Motion* after you file your *Motion*.
+  
+  **Note:** Be sure to add this to your *Notice of Court Date for Motion* before you send it to other parties in your case.
+
+  ${ collapse_template(hearing_info_help) }  
+fields:
+  - Courtroom number: courtroom
     maxlength: 10
     required: False
+  - How to attend court (check all that apply): attend_court
+    datatype: checkboxes
+    choices:
+      - In person: in_person
+      - Remotely: remote
+    none of the above: |
+      I don't know. I will add this to my forms later.
+  - Video conference website (URL): remote_website
+    maxlength: 100
+    input type: area
+    rows: 2
+    required: False
+    show if:
+      variable: attend_court['remote']
+      is: True
+  - Video conference log-in information (Meeting ID, password, etc.): remote_login
+    maxlength: 100
+    input type: area
+    rows: 2
+    required: False
+    show if:
+      variable: attend_court['remote']
+      is: True
+  - Call-in phone number for remote appearance: remote_phone
+    datatype: al_international_phone
+    required: False
+    show if:
+      variable: attend_court['remote']
+      is: True
 
 ---
 template: hearing_info_help
@@ -1237,7 +1277,7 @@ subject: |
 content: |  
   You can put information on how to attend court on the bottom of page 1 of your *Notice of Court Date for Motion*.
 
-  We will add the courthouse address to your forms. Call the Circuit Clerk or visit their website for more information. EXPAND THIS
+  We will add the courtroom address to your forms. To get the other information, contact your Circuit Clerk. You can look up how to contact them using [**Find Your Court**](https://www.illinoiscourts.gov/courts-directory/interactive-map/by-court-type/) on the Illinois Courts website.
   
   [FILE hearing_information.png, 100%, Part of Notice of Court Date for Motion form]
 
@@ -2626,9 +2666,13 @@ attachment:
       - "hearing_time": ${ format_time(hearing_time, format='h:mm') if (defined('hearing_time') and has_court_date) else '' }
       - "hearing_am_checkbox": ${ True if (has_court_date and format_time(hearing_time, format='a')=='AM') else '' }
       - "hearing_pm_checkbox": ${ True if (has_court_date and format_time(hearing_time, format='a')=='PM') else '' }
-      - "in_person_cb": ${ "" }
+      - "in_person_cb": ${ attend_court['in_person'] }
+      - "remote_cb": ${  attend_court['remote'] }
+      - "remote_url": ${ remote_website if attend_court['remote'] == True else '' }
+      - "remote_login": ${  remote_login if attend_court['remote'] == True else ''}
+      - "remote_phone": ${ phone_number_formatted(remote_phone) if attend_court['remote'] == True else '' }
       - "hearing_courtroom": ${ courtroom if has_court_date else '' }
-      - "hearing_courtroom__2": ${ courtroom if has_court_date else '' }
+      - "hearing_courtroom__2": ${ courtroom }
       - "courthouse_address": ${ courthouse_info }
       - "clerk_phone": ${ trial_court.phone }
       - "clerk_website": ${ trial_court.website }
@@ -2986,11 +3030,38 @@ review:
       **Motion court date on:**
       ${ hearing_date } at ${ format_time(hearing_time, "h:mm a") }
     show if: has_court_date
+  - Edit: attend_court
+    button: |
+      **How can parties attend court?**
+      
+      % if attend_court['in_person'] == True:
+        * In person
+      % endif
+      % if attend_court['remote'] == True:
+        * Remotely
+      % endif
+      % if attend_court['in_person'] == False and attend_court['remote'] == False:
+        * I don't know. I will add this to my forms later. 
+      % endif
   - Edit: courtroom
     button: |
       **Courtroom:**
       ${ courtroom }
-    show if: has_court_date
+  - Edit: remote_website
+    button: |
+      **Video conference website (URL):**
+      ${ remote_website }
+    show if: attend_court['remote'] == True
+  - Edit: remote_login
+    button: |
+      **Video conference log-in information:**
+      ${ remote_login }
+    show if: attend_court['remote'] == True
+  - Edit: remote_phone
+    button: |
+      **Call-in phone number for remote appearance:**
+      ${ phone_number_formatted(remote_phone) }
+    show if: attend_court['remote'] == True
   - Edit: users[0].address.address
     button: |
       **Your address:**
@@ -3384,11 +3455,39 @@ review:
       **Motion court date on:**
       ${ hearing_date } at ${ format_time(hearing_time, "h:mm a") }
     show if: has_court_date
+
+  - Edit: attend_court
+    button: |
+      **How can parties attend court?**
+      
+      % if attend_court['in_person'] == True:
+        * In person
+      % endif
+      % if attend_court['remote'] == True:
+        * Remotely
+      % endif
+      % if attend_court['in_person'] == False and attend_court['remote'] == False:
+        * I don't know. I will add this to my forms later. 
+      % endif
   - Edit: courtroom
     button: |
       **Courtroom:**
       ${ courtroom }
-    show if: has_court_date
+  - Edit: remote_website
+    button: |
+      **Video conference website (URL):**
+      ${ remote_website }
+    show if: attend_court['remote'] == True
+  - Edit: remote_login
+    button: |
+      **Video conference log-in information:**
+      ${ remote_login }
+    show if: attend_court['remote'] == True
+  - Edit: remote_phone
+    button: |
+      **Call-in phone number for remote appearance:**
+      ${ phone_number_formatted(remote_phone) }
+    show if: attend_court['remote'] == True
       
 ---
 id: about you review screen
