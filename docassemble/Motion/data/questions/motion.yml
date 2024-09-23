@@ -1152,6 +1152,8 @@ subquestion: |
   You must tell them about your motion and when you will present it to the judge.
 
   If someone in the case has a lawyer, you must tell their lawyer.
+
+  **Note:** You must deliver your forms before the court date when you will present your motion to the judge.
 ---
 depends on:
   - trial_court_index
@@ -1308,6 +1310,8 @@ subquestion: |
   You must send a copy of your forms to each of them.
 
   If someone in the case has a lawyer, send it to their lawyer.
+
+  **Note:** You must deliver your forms before the court date when you will present your motion to the judge.
 ---
 id: has lawyer
 generic object: ALIndividual
