@@ -2301,7 +2301,7 @@ attachment:
       - "user_phone_number__1": ${ phone_number_formatted(users[0].phone_number) }
       - "user_email__1": ${ users[0].email if users[0].has_email_address else '' }
       - "case_number__1": ${ case_number }
-      - "e_sign_name__1": ${ users[0].email if users[0].has_email_address else '' }
+      - "e_sign_name__1": ${ users[0].name.full(middle="full") if e_signature else '' }
 
       - "delivery_party1_name_full": | 
           % if x.is_represented:
