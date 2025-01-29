@@ -217,7 +217,7 @@ subquestion: |
 
   You can find most of this information on other court papers you have about this case. 
 
-  Set aside 10 to 15 minutes to finish this program. You can log in and save your work to return to later. 
+  Set aside 10 to 15 minutes to finish this program. You can log in and save your work to continue later. 
  
   ${ collapse_template(help_example) }  
 
@@ -234,7 +234,7 @@ continue button field: whats_next
 question: |
   After you finish this program
 subquestion: |
-  After you download your Motion, you must file it with the court. This program does not file your ${ form_name } for you.
+  After you download your Motion, you must file it with the court. This program **does not** file your ${ form_name } for you.
   
   You may need to schedule a court date for when the judge will hear your motion. The scheduling process is different depending on your location and case type. Check with your local circuit clerk for how to schedule a motion hearing.
   
@@ -298,7 +298,7 @@ content: |
 ---
 id: any other users
 question: |
-  Is anyone else on your side of this case?
+  Are there any other ${ party_label }s this case?
 subquestion: |
   ${ collapse_template(other_users_help) }  
 
@@ -345,7 +345,7 @@ sets:
 id: other users names
 question: |
   % if al_form_type in ['starts_case','existing_case','appeal']:
-  What is the name of the ${ ordinal(i - 1 ) } other person who is part of the case with you?
+  What is the name of the ${ ordinal(i - 1 ) } co-${ party_label } in your case?
   % else:
   What is the name of the ${ ordinal(i - 1 ) } other person who is adding their name to
   this form with you?
@@ -438,7 +438,7 @@ question: |
 subquestion: |
   Look at the name of the case at the top of the court papers. "In re" is often used in probate, guardianship, and some family law cases. For example, a probate case regarding Jane Doe’s estate might be called "In re: Estate of Jane Doe."
 
-  **Note:** If the court papers say "In re:" but also list the names of people in the case, you can select **No**. For example, if the case title is "In re: Marriage of Julia Smith and Tony Smith," the names you already entered will be put on your forms.
+  **Note:** If the court papers say "In re:" but also list the names of people in the case, you can select **No**. For example, if the case title is "In re: Marriage of Julia Smith and Tony Smith," the names you already entered will be put on your forms so you can select **No**.
 fields:
   - no label: in_re_check
     datatype: yesnoradio
@@ -450,7 +450,7 @@ subquestion: |
   For example, the case could be called "In re: The Will of Elena Black."
 fields:
   - In re:: in_re_label
-    maxlength: 50
+    maxlength: 60
 ---
 depends on:
   - trial_court_index
@@ -1120,13 +1120,13 @@ terms:
 id: notice intro
 continue button field: notice_intro
 question: |
-  Tell all other parties in your case about your motion
+  Let the other parties in your case know about your motion
 subquestion: |
   These are the other parties in this case: ${comma_and_list(delivery_parties)}.
 
-  You must tell them about your motion and when you will present it to the judge.
+  You must let them know about your motion and when you will present it to the judge.
 
-  If someone in the case has a lawyer, you must tell their lawyer.
+  If someone in the case has a lawyer, you must let their lawyer know.
 
   **Note:** You must deliver your forms before the court date when you will present your motion to the judge.
 ---
@@ -1208,9 +1208,9 @@ question: |
 subquestion: |
   Your court date could be in person, by phone, or by video. If your court date is by phone or video, it is called a "Remote Appearance."
   
-  Enter how to attend the court hearing below. If the clerk did not give you this information yet, leave it blank. You can add it to the *Notice of Court Date for Motion* after you file your *Motion*.
+  Enter the court date details below. If the clerk did not give you this information yet, leave it blank. You can add it to the *Notice of Court Date for Motion* after you file your *Motion*.
   
-  **Note:** Be sure to add this to your *Notice of Court Date for Motion* before you send it to other parties in your case.
+  **Note:** Be sure to add the court date information to your *Notice of Court Date for Motion* before you send it to other parties in your case.
 
   ${ collapse_template(hearing_info_help) }  
 fields:
