@@ -416,7 +416,7 @@ continue button field: case_county
 question: |
   In which county was this case filed?
 fields:
-  - no label: trial_court_index
+  - County: trial_court_index
     datatype: integer
     code: |
       court_county_lookup()
@@ -1124,7 +1124,7 @@ continue button field: notice_intro
 question: |
   Let the other parties in your case know about your motion
 subquestion: |
-  These are the other parties in this case: ${comma_and_list(delivery_parties)}.
+  These are the other parties in this case: ${comma_and_list(delivery_parties.full_names())}.
 
   You must let them know about your motion and when you will present it to the judge.
 
@@ -1264,9 +1264,9 @@ content: |
 reconsider: True
 code: |
   if anyone_opposing:
-    delivery_parties = DAList("delivery_parties", elements = other_parties + users[1:])
+    delivery_parties = ALPeopleList("delivery_parties", elements = other_parties + users[1:])
   else:
-    delivery_parties = DAList("delivery_parties", elements = users[1:])
+    delivery_parties = ALPeopleList("delivery_parties", elements = users[1:])
   
 ---
 id: delivery intro
@@ -1274,7 +1274,7 @@ continue button field: delivery_intro
 question: |
   Send your ${ form_name } to all other parties
 subquestion: |
-  These are the other parties in this case: ${comma_and_list(delivery_parties)}.
+  These are the other parties in this case: ${comma_and_list(delivery_parties.full_names())}.
 
   You must send a copy of your forms to each of them.
 
