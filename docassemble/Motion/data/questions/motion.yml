@@ -449,7 +449,7 @@ question: |
 subquestion: |
   For example, the case could be called "In re: The Will of Elena Black."
 
-  If you can't fit the full label into the field below, you can use abbreviations or enter as much as you can. The case number should correctly identify which case you are filing into.
+  **Note:** If you can't fit the full "in re:" title into the field below, you can use abbreviations or enter as much as you can. The case number should correctly identify which case you are filing into.
 fields:
   - In re:: in_re_label
     maxlength: 60
