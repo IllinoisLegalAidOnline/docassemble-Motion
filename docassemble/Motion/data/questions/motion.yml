@@ -1261,7 +1261,11 @@ content: |
 ---
 reconsider: True
 code: |
-  delivery_parties = DAList("delivery_parties", elements = other_parties + users[1:])
+  if anyone_opposing:
+    delivery_parties = DAList("delivery_parties", elements = other_parties + users[1:])
+  else:
+    delivery_parties = DAList("delivery_parties", elements = users[1:])
+  
 ---
 id: delivery intro
 continue button field: delivery_intro
@@ -1280,11 +1284,13 @@ id: has lawyer
 generic object: ALIndividual
 question: |
   Does ${ x.name.full(middle="full") } have a lawyer in this case?
-field: x.is_represented
-choices:
-  - Yes: True
-  - No: False
-  - I don't know: null 
+fields:
+  - no label: x.is_represented
+    datatype: radio
+    choices:
+    - Yes: True
+    - No: False
+    - I don't know.: null
 # note: null will be None in review screen
 ---
 id: add lawyer
@@ -1364,10 +1370,12 @@ subquestion: |
   For best results, complete the Proof of Delivery section and send the forms today.
 
   If you do not know this now, you can add it to the Proof of Delivery section of your forms later.
-field: x.knows_delivery_method
-choices:
-  - Yes: True
-  - No. I do not know this now. I will add it to my forms later.: False
+fields:
+  - no label: x.knows_delivery_method
+    datatype: radio
+    choices:
+      - Yes: True
+      - No. I do not know this now. I will add it to my forms later.: False
 ---
 template: delivery_method_help
 subject: |
@@ -1821,7 +1829,7 @@ attachment:
           % endif
           % endif
       - "defendants": |
-          % if in_re_check:
+          % if in_re_check or anyone_opposing == False:
           ${ "" }
           % else:
           ${list_defendants(users.full_names(), other_parties.full_names(), anyone_opposing, party_label)}
@@ -1940,7 +1948,7 @@ attachment:
           % endif
           % endif
       - "defendants": |
-          % if in_re_check:
+          % if in_re_check or anyone_opposing == False:
           ${ "" }
           % else:
           ${list_defendants(users.full_names(), other_parties.full_names(), anyone_opposing, party_label)}
@@ -2068,7 +2076,7 @@ attachment:
           % endif
           % endif
       - "defendants": |
-          % if in_re_check:
+          % if in_re_check or anyone_opposing == False:
           ${ "" }
           % else:
           ${list_defendants(users.full_names(), other_parties.full_names(), anyone_opposing, party_label)}
@@ -2380,7 +2388,7 @@ attachment:
           % endif
           % endif
       - "defendants": |
-          % if in_re_check:
+          % if in_re_check or anyone_opposing == False:
           ${ "" }
           % else:
           ${list_defendants(users.full_names(), other_parties.full_names(), anyone_opposing, party_label)}
@@ -2495,7 +2503,7 @@ attachment:
           % endif
           % endif
       - "defendants": |
-          % if in_re_check:
+          % if in_re_check or anyone_opposing == False:
           ${ "" }
           % else:
           ${list_defendants(users.full_names(), other_parties.full_names(), anyone_opposing, party_label)}
@@ -2533,7 +2541,7 @@ attachment:
           % endif
           % endif
       - "defendants": |
-          % if in_re_check:
+          % if in_re_check or anyone_opposing == False:
           ${ "" }
           % else:
           ${list_defendants(users.full_names(), other_parties.full_names(), anyone_opposing, party_label)}
@@ -2890,7 +2898,15 @@ review:
   - Edit: x.delivery_date
     button: |
       **Delivery on:**
+      % if x.knows_delivery_date == True and x.knows_delivery_time == True:
       ${ x.delivery_date } at ${ format_time(x.delivery_time, "h:mm a") }
+      % elif x.knows_delivery_date: 
+	    ${ x.delivery_date }, time not entered.
+      % elif x.knows_delivery_time:
+	    Date not entered, ${ format_time(x.delivery_time, "h:mm a") }.
+      % else:
+      Incomplete date and time entered.
+      % endif      
     show if: x.knows_delivery_method
 ---
 id: users review screen
