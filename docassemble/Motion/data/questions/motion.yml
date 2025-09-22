@@ -21,6 +21,9 @@ objects:
   - delivery_parties: ALPeopleList.using(there_are_any=True)
   - delivery_parties[i].lawyer: ALIndividual
   - court_list: ALCourtLoader.using(file_name='docassemble.ILAO:data/sources/il_courts.xlsx')
+  - third_parties: ALPeopleList.using(there_are_any=True)
+  - third_parties[i].lawyer: ALIndividual
+  - third_parties[i].jail_delivery_address: ALAddress
 ---
 mandatory: True
 objects:
@@ -69,7 +72,9 @@ code: |
   else:
     anyone_opposing = True # find a way to move to separate code block
     other_parties.gather()
-  
+  if has_third_parties:
+    third_parties.gather()
+
   set_progress(25)
   if in_re_check == True:
     in_re_label
@@ -413,6 +418,56 @@ subquestion: |
   So far you have told us about ${ other_parties.full_names() }.
 fields:
   - "Anyone else?": other_parties.there_is_another
+    datatype: yesnoradio
+---
+id: any third parties
+question: |
+  Are there any third parties in this court case?
+subquestion: |
+  A third party is not one of the **{original parties}** in a lawsuit. Third parties enter a court case because:
+
+  * They may be affected by the outcome of the case, or
+  * The judge appoints them to represent someone who may be affected by the case.
+
+  For example, in a divorce case that involves minor children, the judge may appoint a third party called a Guardian ad Litem (GAL) to represent the interests of the children.
+
+  **Note:** Most cases do not have third parties involved.
+
+  Since third parties can be affected by the outcome of the case, the law gives them the right to receive notice of things that are filed in the case.
+fields:
+  - Any third parties in this case?: has_third_parties
+    datatype: yesnoradio
+terms:
+  - "original parties": |
+      The **original parties** in a lawsuit are the people or businesses who:
+      
+      * Started the case, such as the Plaintiffs or Petitioners, and
+      * The case is against, such as the Defendants or Respondents.   
+---
+sets:
+  - third_parties[i].name.first
+id: third party names
+question: |
+  % if i == 0:
+  What is the name of the third party in this case?
+  % else:
+  What is the name of the ${ ordinal(i) } third party in this case?
+  % endif
+subquestion: |
+  ${ collapse_template(long_name_help) }
+fields:
+  - code: |
+      third_parties[i].name_fields(person_or_business='unsure')
+---
+id: any other third parties
+question: |
+  Is there another third party in this case?
+subquestion: |
+  % if len(other_parties.elements) >= 1:  
+  So far you have told us about ${third_parties.full_names()}.
+  % endif
+fields:
+  - "Anyone else?": third_parties.there_is_another
     datatype: yesnoradio
 ---
 id: trial court county
@@ -1277,10 +1332,15 @@ content: |
 reconsider: True
 code: |
   if anyone_opposing:
-    delivery_parties = ALPeopleList("delivery_parties", elements = other_parties + users[1:])
+    if has_third_parties:
+      delivery_parties = ALPeopleList("delivery_parties", elements = other_parties + third_parties + users[1:])
+    else:
+      delivery_parties = ALPeopleList("delivery_parties", elements = other_parties + users[1:])
   else:
-    delivery_parties = ALPeopleList("delivery_parties", elements = users[1:])
-  
+    if has_third_parties:
+      delivery_parties = ALPeopleList("delivery_parties", elements = third_parties + users[1:])
+    else:
+      delivery_parties = ALPeopleList("delivery_parties", elements = users[1:])  
 ---
 id: delivery intro
 continue button field: delivery_intro
@@ -2422,6 +2482,18 @@ review:
       % for my_var in other_parties:
         * ${ my_var.name_full() }
       % endfor
+  - Edit: has_third_parties
+    button: |
+      **Any third parties in this case?**
+      ${word(yesno(has_third_parties))}
+  - Edit: third_parties.revisit
+    button: |
+      **Third parties: (Edit to change name, lawyer, address, and delivery info)**
+
+      % for my_var in third_parties:
+        * ${ my_var.name_full() }
+      % endfor
+    show if: has_third_parties      
   - Edit: in_re_check
     button: |
       **Does the court case have "In re:" in the name?**  
@@ -2802,6 +2874,26 @@ columns:
 delete buttons: True
 confirm: True
 ---
+id: third parties review screen
+continue button field: third_parties.revisit
+section: Case info
+question: |
+  Edit the third parties
+subquestion: |
+  ${ third_parties.table }
+
+  ${ third_parties.add_action() }
+---
+table: third_parties.table
+rows: third_parties
+columns:
+  - Name: |
+      row_item.name_full() if defined("row_item.name.first") else ""
+  - Party, lawyer, address, and delivery info: |
+      action_button_html(url_action(row_item.attr_name("review_delivery")), label="Edit", icon="pencil-alt")
+delete buttons: True
+confirm: True
+---
 id: case info review screen
 section: Case info
 event: section_case_info
@@ -2838,6 +2930,18 @@ review:
       % for my_var in other_parties:
         * ${ my_var.name_full() }
       % endfor
+  - Edit: has_third_parties
+    button: |
+      **Any third parties in this case?**
+      ${word(yesno(has_third_parties))}
+  - Edit: third_parties.revisit
+    button: |
+      **Third parties: (Edit to change name, lawyer, address, and delivery info)**
+
+      % for my_var in third_parties:
+        * ${ my_var.name_full() }
+      % endfor
+    show if: has_third_parties      
   - Edit: in_re_check
     button: |
       **Does the court case have "In re:" in the name?**  
@@ -3051,6 +3155,18 @@ review:
       % for my_var in other_parties:
         * ${ my_var.name_full() }
       % endfor
+  - Edit: has_third_parties
+    button: |
+      **Any third parties in this case?**
+      ${word(yesno(has_third_parties))}
+  - Edit: third_parties.revisit
+    button: |
+      **Third parties: (Edit to change name, lawyer, address, and delivery info)**
+
+      % for my_var in third_parties:
+        * ${ my_var.name_full() }
+      % endfor
+    show if: has_third_parties      
   - Edit: has_court_date
     button: |
       **Do you already have a court date for your motion from the clerk?**
