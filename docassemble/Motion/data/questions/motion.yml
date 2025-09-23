@@ -1265,7 +1265,7 @@ subquestion: |
   If you do not have this information now, you can click **Back** and change your answer.
   % if motion_type == "Extend a deadline":
   
-  Since you are asking the judge to extend the deadline until ${new_deadline}, you should schedule your hearing **before that date**.
+  Since you are asking the judge to extend the deadline to ${new_deadline}, you should schedule your hearing **before that date**.
   % endif
 
   **Note:** Be sure to add the date and time to your *Notice of Court Date for Motion* before you send it to other parties in your case.
@@ -1579,6 +1579,7 @@ fields:
   - Date: x.delivery_date
     datatype: date
     required: False
+    min: ${ today().minus(years=1) }
     max: ${ today().plus(years=1) }
   - Time: x.delivery_time
     datatype: time
