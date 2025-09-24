@@ -1155,29 +1155,34 @@ subquestion: |
   % if motion_type == "Something else":
   <div class="alert alert-info ilao-info" role="alert">
     <h6 class="alert-heading">What it means to sign your forms</h6>
-    <p>By signing your <i>Motion</i>, you are certifying that:</p>
+    <p>By signing the <i>Motion</i> and <i>Notice of Court Date for Motion</i> forms, you are certifying that:</p>
     <p><ul>
-      <li>Everything on the forms is true and correct, and</li>
-      <li>You understand that making a false statement on the forms is perjury, which can result in criminal penalties.</li>
+      <li>You read the document,</li>
+      <li>You have been informed and believe it is true and correct, and</li>
+      <li>You are not filing it to cause delay or for another bad reason.</li>
     </ul></p>
+    <p>See the <a href="https://ilcourtsaudio.blob.core.windows.net/antilles-resources/resources/9ce1fce9-895f-463e-b87d-f9b7631f8fde/Rule%20137.pdf"><b>Illinois Supreme Court Rule 137</b></a> for more information.</p>
+    <p>By signing the and Proof of Delivery section of your forms, you are certifying that:</p>
+    <p><ul>
+      <li>Everything on the forms is true and correct, or you have been informed or believe it to be true and correct, and</li>
+      <li>You understand that making a false statement on the forms is perjury and has penalties provided by law.</li>    </ul></p>
   <p>See the <a href="https://www.ilga.gov/legislation/ilcs/documents/073500050k1-109.htm"><b>Code of Civil Procedure, 735 ILCS 5/1-109</b></a> for more information.</p>
   </div>
   % else:
   <div class="alert alert-info ilao-info" role="alert">
     <h6 class="alert-heading">What it means to sign your forms</h6>
-    <p>By signing your <i>Motion to Continue or Extend Time</i>, you are certifying that:</p>
+    <p>By signing the <i>Motion to Continue or Extend Time</i> and <i>Notice of Court Date for Motion</i> forms, you are certifying that:</p>
     <p><ul>
       <li>You read the document,</li>
-      <li>You believe it to be true and correct, and</li>
-      <li>You are not filing it for an improper purpose.</li>
+      <li>You have been informed and believe it is true and correct, and</li>
+      <li>You are not filing it to cause delay or for another bad reason.</li>
     </ul></p>
     <p>See the <a href="https://ilcourtsaudio.blob.core.windows.net/antilles-resources/resources/9ce1fce9-895f-463e-b87d-f9b7631f8fde/Rule%20137.pdf"><b>Illinois Supreme Court Rule 137</b></a> for more information.</p>
-    <p>By signing the Proof of Delivery section of your <i>Motion to Continue or Extend Time</i>, you are certifying that:</p>
+    <p>By signing the and Proof of Delivery section of your forms, you are certifying that:</p>
     <p><ul>
-      <li>Everything on the forms is true and correct, and</li>
-      <li>You understand that making a false statement on the forms is perjury, which can result in criminal penalties.</li>
-    </ul></p>
-  <p>See the <a href="https://www.ilga.gov/legislation/ilcs/documents/073500050k1-109.htm"><b>Code of Civil Procedure, 735 ILCS 5/1-109</b></a> for more information.</p>
+      <li>Everything on the forms is true and correct, or you have been informed or believe it to be true and correct, and</li>
+      <li>You understand that making a false statement on the forms is perjury and has penalties provided by law.</li>    </ul></p>
+  <p>See the <a href="https://www.ilga.gov/legislation/ilcs/documents/073500050k1-109.htm"><b>Code of Civil Procedure, 735 ILCS 5/1-109</b></a> for more information.</p>  
   </div>
   % endif
 fields:
@@ -3249,3 +3254,7 @@ review:
       **Your email:**
       ${ users[0].email }
     show if: users[0].has_email_address
+  - Edit: e_signature
+    button: |
+      **Do you want to add your e-signature to your forms?**
+      ${ word(yesno(e_signature)) }
