@@ -81,6 +81,8 @@ code: |
   #trial_court_index
   if trial_court_index == -1:
     cook_district
+  elif trial_court_index == -2:
+    kane_district
   courthouse_info
   case_number
   
@@ -312,7 +314,7 @@ subquestion: |
   ${ collapse_template(other_users_help) }  
 
   % if len(users.elements) > 1:  
-  So far you have told us about ${ users.full_names() }.
+  So far you have told us about ${fix_punctuation(users.full_names()) }
   % endif  
 fields:
   - "Anyone else?": users.there_is_another
@@ -415,7 +417,7 @@ id: any more other parties
 question: |
   Are there any other ${ opposing_label }s in the case?
 subquestion: |  
-  So far you have told us about ${ other_parties.full_names() }.
+  So far you have told us about ${fix_punctuation(other_parties.full_names()) }
 fields:
   - "Anyone else?": other_parties.there_is_another
     datatype: yesnoradio
@@ -464,7 +466,7 @@ question: |
   Is there another third party in this case?
 subquestion: |
   % if len(other_parties.elements) >= 1:  
-  So far you have told us about ${third_parties.full_names()}.
+  So far you have told us about ${fix_punctuation(third_parties.full_names()) }
   % endif
 fields:
   - "Anyone else?": third_parties.there_is_another
@@ -483,9 +485,11 @@ fields:
 code: |
   def court_county_lookup(lowercase=False):
     all_court_counties = court_list._load_courts()['address_county'].items()
-    filtered_courts = [(-1, "cook")] if lowercase else [(-1, "Cook")]
+    #filtered_courts = [(-1, "cook")] if lowercase else [(-1, "Cook")]
+    filtered_courts = [(-1, "cook"), (-2, "kane")] if lowercase else [(-1, "Cook"), (-2, "Kane")]
     for court in all_court_counties:
-      if court[1] != "Cook":
+      #if court[1] != "Cook":
+      if court[1] != "Cook" and court[1] != "Kane":
         court_name = court[1].lower() if lowercase else court[1]
         filtered_courts.append((court[0],court_name))
     return sorted( filtered_courts, key=lambda y: y[1])
@@ -513,14 +517,20 @@ fields:
   - In re:: in_re_label
     maxlength: 60
 ---
-depends on:
-  - trial_court_index
-code: |
-  if trial_court_index == -1:
-    trial_court = court_list.as_court('trial_court', 15)
-    trial_court.address.county = "Cook"
-  else:
-    trial_court = court_list.as_court('trial_court', trial_court_index)
+# consolidated with other code block
+#depends on:
+#  - trial_court_index
+#code: |
+#  if trial_court_index == -1:
+#    trial_court = court_list.as_court('trial_court', 15)
+#    trial_court.address.county = "Cook"
+#
+#  elif trial_court_index == -2:
+#    trial_court = court_list.as_court('trial_court', 52)
+#    trial_court.address.county = "Kane"
+#  
+#  else:
+#    trial_court = court_list.as_court('trial_court', trial_court_index)
 ---
 id: case number
 question: |
@@ -1166,7 +1176,7 @@ subquestion: |
     <p><ul>
       <li>Everything on the forms is true and correct, or you have been informed or believe it to be true and correct, and</li>
       <li>You understand that making a false statement on the forms is perjury and has penalties provided by law.</li>    </ul></p>
-  <p>See the <a href="https://www.ilga.gov/legislation/ilcs/documents/073500050k1-109.htm"><b>Code of Civil Procedure, 735 ILCS 5/1-109</b></a> for more information.</p>
+  <p>See the <a href="https://www.ilga.gov/legislation/ilcs/documents/073500050k1-109.htm"><b>Illinois Code of Civil Procedure, 735 ILCS 5/1-109</b></a> for more information.</p>
   </div>
   % else:
   <div class="alert alert-info ilao-info" role="alert">
@@ -1182,7 +1192,7 @@ subquestion: |
     <p><ul>
       <li>Everything on the forms is true and correct, or you have been informed or believe it to be true and correct, and</li>
       <li>You understand that making a false statement on the forms is perjury and has penalties provided by law.</li>    </ul></p>
-  <p>See the <a href="https://www.ilga.gov/legislation/ilcs/documents/073500050k1-109.htm"><b>Code of Civil Procedure, 735 ILCS 5/1-109</b></a> for more information.</p>  
+  <p>See the <a href="https://www.ilga.gov/legislation/ilcs/documents/073500050k1-109.htm"><b>Illinois Code of Civil Procedure, 735 ILCS 5/1-109</b></a> for more information.</p>  
   </div>
   % endif
 fields:
@@ -1197,7 +1207,7 @@ continue button field: notice_intro
 question: |
   Let the other parties in your case know about your motion
 subquestion: |
-  These are the other parties in this case: ${comma_and_list(delivery_parties.full_names())}.
+  These are the other parties in this case: ${fix_punctuation(delivery_parties.full_names()) }
 
   You must let them know about your motion and when you will present it to the judge.
 
@@ -1208,9 +1218,14 @@ subquestion: |
 depends on:
   - trial_court_index
   - cook_district
+  - kane_district
 code: |
   if trial_court_index == -1:
-    trial_court = court_list.as_court('trial_court', cook_district)
+    trial_court = court_list.as_court('trial_court', int(cook_district))
+
+  elif trial_court_index == -2:
+    trial_court = court_list.as_court('trial_court', int(kane_district))
+  
   else:
     trial_court = court_list.as_court('trial_court', trial_court_index)
     
@@ -1220,6 +1235,8 @@ code: |
   court_state = str(trial_court.address.state)
   court_zip = str(trial_court.address.zip)
   courthouse_info = court_name + ", " + court_street_address + ", " + court_city + ", " + court_state
+
+  
 #  courthouse_info = court_name + ", " + court_street_address + ", " + court_city + ", " + court_state + " " + court_zip
 ---
 id: Cook County district
@@ -1242,6 +1259,28 @@ choices:
   - Juvenile Center, 2245 West Ogden Avenue, Chicago: 23
 ---
 template: cook_district_help
+subject: |
+  **What if I am not sure?**
+content: |  
+  Visit **[Illinois Court Help](https://www.ilcourthelp.gov/)**, or you can call or text (833) 411-1121 for assistance.
+---
+id: Kane County district
+question: |
+  In which Kane County courthouse is your case?
+subquestion: |
+  This information should be found near the top of your court papers.
+
+  ${ collapse_template(kane_district_help) }  
+field: kane_district
+choices:
+  - Kane County Courthouse, 100 S. 3rd Street, Geneva: 52
+  - Kane County Judicial Center, 37W777 Route 38, St. Charles: 53
+  - Kane County Juvenile Justice Center, 37W655 Route 38, St. Charles: 54
+  - Kane County Branch Court, 530 S. Randall Road, St. Charles: 55
+  - Aurora Branch Court, 1200 East Indian Trail Road, Aurora: 56
+  - Elgin Branch Court, 150 Dexter Court, Elgin: 57
+---
+template: kane_district_help
 subject: |
   **What if I am not sure?**
 content: |  
@@ -1356,7 +1395,7 @@ continue button field: delivery_intro
 question: |
   Send your ${ form_name } to all other parties
 subquestion: |
-  These are the other parties in this case: ${comma_and_list(delivery_parties.full_names())}.
+  These are the other parties in this case: ${fix_punctuation(delivery_parties.full_names()) }
 
   You must send a copy of your forms to each of them.
 
@@ -2314,13 +2353,19 @@ attachment:
       - "hearing_courtroom": ${ courtroom if has_court_date else '' }
 
       - "courthouse_address": |
-          % if has_court_date:
           % if courtroom != "":          
           ${ courthouse_info + ", Room # " + courtroom }
-          % endif
           % else:
           ${ courthouse_info }          
           % endif
+# code updated - always show courthouse address even if court date not known
+#          % if has_court_date:
+#          % if courtroom != "":          
+#          ${ courthouse_info + ", Room # " + courtroom }
+#          % endif
+#          % else:
+#          ${ courthouse_info }          
+#          % endif
       - "clerk_phone": ${ trial_court.phone }
       - "clerk_website": ${ trial_court.website }
         
@@ -2519,29 +2564,55 @@ review:
     button: |
       **County where this case is filed:**
       ${ trial_court.address.county }
-  - Edit: cook_district
+
+  - Edit: 
+      - cook_district
+      - recompute:
+        - trial_court
     button: |
       **Cook County courthouse:**
-      % if cook_district == "15":
+      % if cook_district == 15:
       ${ "Daley Center, 50 W. Washington Street, Chicago" }
-      % elif cook_district == "16":
+      % elif cook_district == 16:
       ${ "Second Municipal District, 5600 Old Orchard Road, Skokie" }
-      % elif cook_district == "17":
+      % elif cook_district == 17:
       ${ "Third Municipal District, 2121 Euclid Avenue, Rolling Meadows" }
-      % elif cook_district == "18":
+      % elif cook_district == 18:
       ${ "Fourth Municipal District, 1500 Maybrook Drive, Maywood" }
-      % elif cook_district == "19":
+      % elif cook_district == 19:
       ${ "Fifth Municipal District, 10220 S. 76th Avenue, Bridgeview" }
-      % elif cook_district == "20":
+      % elif cook_district == 20:
       ${ "Sixth Municipal District, 16501 South Kedzie Parkway, Markham" }
-      % elif cook_district == "21":
+      % elif cook_district == 21:
       ${ "Domestic Violence Court, 555 W. Harrison Street, Chicago" }
-      % elif cook_district == "22":
+      % elif cook_district == 22:
       ${ "George N. Leighton Criminal Court Building, 2600 S. California Avenue, Chicago" }
       % else:
       ${ "Juvenile Center, 2245 West Ogden Avenue, Chicago" }
       % endif      
-    show if: trial_court_index == -1      
+    show if: trial_court_index == -1
+
+  - Edit:
+      - kane_district
+      - recompute:
+        - trial_court
+    button: |
+      **Kane County courthouse:**
+      % if kane_district == 52:
+      ${ "Kane County Courthouse, 100 S. 3rd Street, Geneva" }
+      % elif kane_district == 53:
+      ${ "Kane County Judicial Center, 37W777 Route 38, St. Charles" }
+      % elif kane_district == 54:
+      ${ "Kane County Juvenile Justice Center, 37W655 Route 38, St. Charles" }
+      % elif kane_district == 55:
+      ${ "Kane County Branch Court, 530 S. Randall Road, St. Charles" }
+      % elif kane_district == 56:
+      ${ "Aurora Branch Court, 1200 East Indian Trail Road, Aurora" }
+      % else:
+      ${ "Elgin Branch Court, 150 Dexter Court, Elgin" }
+      % endif      
+    show if: trial_court_index == -2
+
   - Edit: case_number
     button: |
       **Case number:**
@@ -2967,29 +3038,54 @@ review:
     button: |
       **County where this case is filed:**
       ${ trial_court.address.county }
-  - Edit: cook_district
+  - Edit: 
+      - cook_district
+      - recompute:
+        - trial_court
     button: |
       **Cook County courthouse:**
-      % if cook_district == "15":
+      % if cook_district == 15:
       ${ "Daley Center, 50 W. Washington Street, Chicago" }
-      % elif cook_district == "16":
+      % elif cook_district == 16:
       ${ "Second Municipal District, 5600 Old Orchard Road, Skokie" }
-      % elif cook_district == "17":
+      % elif cook_district == 17:
       ${ "Third Municipal District, 2121 Euclid Avenue, Rolling Meadows" }
-      % elif cook_district == "18":
+      % elif cook_district == 18:
       ${ "Fourth Municipal District, 1500 Maybrook Drive, Maywood" }
-      % elif cook_district == "19":
+      % elif cook_district == 19:
       ${ "Fifth Municipal District, 10220 S. 76th Avenue, Bridgeview" }
-      % elif cook_district == "20":
+      % elif cook_district == 20:
       ${ "Sixth Municipal District, 16501 South Kedzie Parkway, Markham" }
-      % elif cook_district == "21":
+      % elif cook_district == 21:
       ${ "Domestic Violence Court, 555 W. Harrison Street, Chicago" }
-      % elif cook_district == "22":
+      % elif cook_district == 22:
       ${ "George N. Leighton Criminal Court Building, 2600 S. California Avenue, Chicago" }
       % else:
       ${ "Juvenile Center, 2245 West Ogden Avenue, Chicago" }
       % endif      
-    show if: trial_court_index == -1      
+    show if: trial_court_index == -1
+
+  - Edit:
+      - kane_district
+      - recompute:
+        - trial_court
+    button: |
+      **Kane County courthouse:**
+      % if kane_district == 52:
+      ${ "Kane County Courthouse, 100 S. 3rd Street, Geneva" }
+      % elif kane_district == 53:
+      ${ "Kane County Judicial Center, 37W777 Route 38, St. Charles" }
+      % elif kane_district == 54:
+      ${ "Kane County Juvenile Justice Center, 37W655 Route 38, St. Charles" }
+      % elif kane_district == 55:
+      ${ "Kane County Branch Court, 530 S. Randall Road, St. Charles" }
+      % elif kane_district == 56:
+      ${ "Aurora Branch Court, 1200 East Indian Trail Road, Aurora" }
+      % else:
+      ${ "Elgin Branch Court, 150 Dexter Court, Elgin" }
+      % endif      
+    show if: trial_court_index == -2
+  
   - Edit: case_number
     button: |
       **Case number:**
