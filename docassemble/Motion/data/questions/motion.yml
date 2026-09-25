@@ -1258,8 +1258,6 @@ choices:
   - Fifth Municipal District, 10220 S. 76th Avenue, Bridgeview: 19
   - Sixth Municipal District, 16501 South Kedzie Parkway, Markham: 20
   - Domestic Violence Court, 555 W. Harrison Street, Chicago: 21
-  - George N. Leighton Criminal Court Building, 2600 S. California Avenue, Chicago: 22
-  - Juvenile Center, 2245 West Ogden Avenue, Chicago: 23
 ---
 template: cook_district_help
 subject: |
@@ -1267,6 +1265,7 @@ subject: |
 content: |  
   Visit **[Illinois Court Help](https://www.ilcourthelp.gov/)**, or you can call or text <a href="tel:833-411-1121">(833) 411-1121</a> for assistance.
 ---
+# 9/25/26 may need to remove crim, traffic, and juvenile court locations
 id: Kane County district
 question: |
   In which Kane County courthouse is your case?
@@ -2585,12 +2584,8 @@ review:
       ${ "Fifth Municipal District, 10220 S. 76th Avenue, Bridgeview" }
       % elif cook_district == 20:
       ${ "Sixth Municipal District, 16501 South Kedzie Parkway, Markham" }
-      % elif cook_district == 21:
-      ${ "Domestic Violence Court, 555 W. Harrison Street, Chicago" }
-      % elif cook_district == 22:
-      ${ "George N. Leighton Criminal Court Building, 2600 S. California Avenue, Chicago" }
       % else:
-      ${ "Juvenile Center, 2245 West Ogden Avenue, Chicago" }
+      ${ "Domestic Violence Court, 555 W. Harrison Street, Chicago" }
       % endif      
     show if: trial_court_index == -1
 
@@ -3058,12 +3053,8 @@ review:
       ${ "Fifth Municipal District, 10220 S. 76th Avenue, Bridgeview" }
       % elif cook_district == 20:
       ${ "Sixth Municipal District, 16501 South Kedzie Parkway, Markham" }
-      % elif cook_district == 21:
-      ${ "Domestic Violence Court, 555 W. Harrison Street, Chicago" }
-      % elif cook_district == 22:
-      ${ "George N. Leighton Criminal Court Building, 2600 S. California Avenue, Chicago" }
       % else:
-      ${ "Juvenile Center, 2245 West Ogden Avenue, Chicago" }
+      ${ "Domestic Violence Court, 555 W. Harrison Street, Chicago" }
       % endif      
     show if: trial_court_index == -1
 
