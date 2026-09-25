@@ -210,6 +210,8 @@ subquestion: |
   Welcome to Illinois Legal Aid Online's **Motion** Easy Form.
 
   A motion is a request to the judge to make the court or a party in the case do something. This program makes a *Motion* or a *Motion to Continue or Extend Time* based on what you need.
+
+  **Note:** The forms made by this program are for civil cases only. They cannot be used in criminal, traffic, or juvenile court cases. 
   
   To learn more, read ILAO's article about [**preparing, filing, and presenting motions in court**](https://www.illinoislegalaid.org/node/32286).
 field: sees_nav_bar
@@ -258,6 +260,8 @@ question: |
   Are you filing a motion into an existing case?
 subquestion: |
   The court case must have already started, either by you or someone else.
+
+  **Note:** The forms made by this program are for civil cases only. They cannot be used in criminal, traffic, or juvenile court cases. 
   
   ${ collapse_template(motion_help) }  
 fields:
@@ -269,7 +273,6 @@ subject: |
   **What if I am not sure?**
 content: |
   Most motions are filed into cases that are still ongoing, but some motions are filed into cases after they are finished. For example, someone might file a Motion to Seal a Court Record into a case that is already over.
-
 ---
 id: must be existing case
 event: must_be_existing_case
@@ -1262,7 +1265,7 @@ template: cook_district_help
 subject: |
   **What if I am not sure?**
 content: |  
-  Visit **[Illinois Court Help](https://www.ilcourthelp.gov/)**, or you can call or text (833) 411-1121 for assistance.
+  Visit **[Illinois Court Help](https://www.ilcourthelp.gov/)**, or you can call or text <a href="tel:833-411-1121">(833) 411-1121</a> for assistance.
 ---
 id: Kane County district
 question: |
@@ -1284,8 +1287,7 @@ template: kane_district_help
 subject: |
   **What if I am not sure?**
 content: |  
-  Visit **[Illinois Court Help](https://www.ilcourthelp.gov/)**, or you can call or text (833) 411-1121 for assistance.
-
+  Visit **[Illinois Court Help](https://www.ilcourthelp.gov/)**, or you can call or text <a href="tel:833-411-1121">(833) 411-1121</a> for assistance.
 ---
 id: hearing scheduled
 question: |
@@ -1605,7 +1607,7 @@ template: efiling_help
 subject: |
   **What if I need help sending my forms electronically?**
 content: |  
-  If you need help delivering by email or using the e-filing system, you can visit a [**Legal Self-Help Center**](https://www.illinoislegalaid.org/get-legal-help/lshc-directory) or you can call, chat, or text a Court Guide at [**Illinois Court Help**](https://www.ilcourthelp.gov) or 833-411-1121.
+  If you need help delivering by email or using the e-filing system, you can visit a [**Legal Self-Help Center**](https://www.illinoislegalaid.org/get-legal-help/lshc-directory) or you can call, chat, or text a Court Guide at [**Illinois Court Help**](https://www.ilcourthelp.gov) or <a href="tel:833-411-1121">(833) 411-1121</a>. 
 ---
 id: delivery time
 generic object: ALIndividual
