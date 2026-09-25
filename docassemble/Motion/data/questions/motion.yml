@@ -1265,7 +1265,6 @@ subject: |
 content: |  
   Visit **[Illinois Court Help](https://www.ilcourthelp.gov/)**, or you can call or text <a href="tel:833-411-1121">(833) 411-1121</a> for assistance.
 ---
-# 9/25/26 may need to remove crim, traffic, and juvenile court locations
 id: Kane County district
 question: |
   In which Kane County courthouse is your case?
@@ -1278,9 +1277,6 @@ choices:
   - Kane County Courthouse, 100 S. 3rd Street, Geneva: 52
   - Kane County Judicial Center, 37W777 Route 38, St. Charles: 53
   - Kane County Juvenile Justice Center, 37W655 Route 38, St. Charles: 54
-  - Kane County Branch Court, 530 S. Randall Road, St. Charles: 55
-  - Aurora Branch Court, 1200 East Indian Trail Road, Aurora: 56
-  - Elgin Branch Court, 150 Dexter Court, Elgin: 57
 ---
 template: kane_district_help
 subject: |
@@ -2599,14 +2595,8 @@ review:
       ${ "Kane County Courthouse, 100 S. 3rd Street, Geneva" }
       % elif kane_district == 53:
       ${ "Kane County Judicial Center, 37W777 Route 38, St. Charles" }
-      % elif kane_district == 54:
-      ${ "Kane County Juvenile Justice Center, 37W655 Route 38, St. Charles" }
-      % elif kane_district == 55:
-      ${ "Kane County Branch Court, 530 S. Randall Road, St. Charles" }
-      % elif kane_district == 56:
-      ${ "Aurora Branch Court, 1200 East Indian Trail Road, Aurora" }
       % else:
-      ${ "Elgin Branch Court, 150 Dexter Court, Elgin" }
+      ${ "Kane County Juvenile Justice Center, 37W655 Route 38, St. Charles" }
       % endif      
     show if: trial_court_index == -2
 
@@ -3068,14 +3058,8 @@ review:
       ${ "Kane County Courthouse, 100 S. 3rd Street, Geneva" }
       % elif kane_district == 53:
       ${ "Kane County Judicial Center, 37W777 Route 38, St. Charles" }
-      % elif kane_district == 54:
-      ${ "Kane County Juvenile Justice Center, 37W655 Route 38, St. Charles" }
-      % elif kane_district == 55:
-      ${ "Kane County Branch Court, 530 S. Randall Road, St. Charles" }
-      % elif kane_district == 56:
-      ${ "Aurora Branch Court, 1200 East Indian Trail Road, Aurora" }
       % else:
-      ${ "Elgin Branch Court, 150 Dexter Court, Elgin" }
+      ${ "Kane County Juvenile Justice Center, 37W655 Route 38, St. Charles" }
       % endif      
     show if: trial_court_index == -2
   
