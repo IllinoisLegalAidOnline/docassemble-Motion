@@ -20,7 +20,7 @@ objects:
   - witness: ALIndividual
   - delivery_parties: ALPeopleList.using(there_are_any=True)
   - delivery_parties[i].lawyer: ALIndividual
-  - court_list: ALCourtLoader.using(file_name='docassemble.ILAO:data/sources/il_courts.xlsx')
+  - court_list: ALCourtLoader.using(file_name='docassemble.ILAO:data/sources/il_courts_plus.xlsx')
   - third_parties: ALPeopleList.using(there_are_any=True)
   - third_parties[i].lawyer: ALIndividual
   - third_parties[i].jail_delivery_address: ALAddress
@@ -213,7 +213,7 @@ subquestion: |
 
   **Note:** The forms made by this program are for civil cases only. They cannot be used in criminal, traffic, or juvenile court cases. 
   
-  To learn more, read ILAO's article about [**preparing, filing, and presenting motions in court**](https://www.illinoislegalaid.org/node/32286).
+  To learn more, read ILAO's article about [**Motions**](https://www.illinoislegalaid.org/node/32286).
 field: sees_nav_bar
 ---
 id: instructions
@@ -1263,7 +1263,11 @@ template: cook_district_help
 subject: |
   **What if I am not sure?**
 content: |  
-  Visit **[Illinois Court Help](https://www.ilcourthelp.gov/)**, or you can call or text <a href="tel:833-411-1121">(833) 411-1121</a> for assistance.
+  For assistance you can contact Illinois Court Help:
+
+  * **[Visit the Illinois Court Help website :external-link:](https://www.ilcourthelp.gov/)**,
+  * <a href="tel:833-411-1121">**Call (833) 411-1121 :phone:**</a>, or
+  * <a href="sms:833-411-1121">**Text (833) 411-1121 :comment:**</a>.
 ---
 id: Kane County district
 question: |
@@ -1281,8 +1285,13 @@ choices:
 template: kane_district_help
 subject: |
   **What if I am not sure?**
-content: |  
-  Visit **[Illinois Court Help](https://www.ilcourthelp.gov/)**, or you can call or text <a href="tel:833-411-1121">(833) 411-1121</a> for assistance.
+content: |
+  For assistance you can contact Illinois Court Help:
+
+  * **[Visit the Illinois Court Help website :external-link:](https://www.ilcourthelp.gov/)**,
+  * <a href="tel:833-411-1121">**Call (833) 411-1121 :phone:**</a>, or
+  * <a href="sms:833-411-1121">**Text (833) 411-1121 :comment:**</a>.
+  
 ---
 id: hearing scheduled
 question: |
