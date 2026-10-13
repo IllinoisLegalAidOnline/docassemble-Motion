@@ -1239,8 +1239,6 @@ code: |
   court_zip = str(trial_court.address.zip)
   courthouse_info = court_name + ", " + court_street_address + ", " + court_city + ", " + court_state
 
-  
-#  courthouse_info = court_name + ", " + court_street_address + ", " + court_city + ", " + court_state + " " + court_zip
 ---
 id: Cook County district
 question: |
@@ -2581,20 +2579,22 @@ review:
         - trial_court
     button: |
       **Cook County courthouse:**
-      % if cook_district == 15:
+      % if cook_district == "15":
       ${ "Daley Center, 50 W. Washington Street, Chicago" }
-      % elif cook_district == 16:
+      % elif cook_district == "16":
       ${ "Second Municipal District, 5600 Old Orchard Road, Skokie" }
-      % elif cook_district == 17:
+      % elif cook_district == "17":
       ${ "Third Municipal District, 2121 Euclid Avenue, Rolling Meadows" }
-      % elif cook_district == 18:
+      % elif cook_district == "18":
       ${ "Fourth Municipal District, 1500 Maybrook Drive, Maywood" }
-      % elif cook_district == 19:
+      % elif cook_district == "19":
       ${ "Fifth Municipal District, 10220 S. 76th Avenue, Bridgeview" }
-      % elif cook_district == 20:
+      % elif cook_district == "20":
       ${ "Sixth Municipal District, 16501 South Kedzie Parkway, Markham" }
-      % else:
+      % elif cook_district == "21":
       ${ "Domestic Violence Court, 555 W. Harrison Street, Chicago" }
+      % else:
+      No courthouse selected
       % endif      
     show if: trial_court_index == -1
 
@@ -2604,12 +2604,14 @@ review:
         - trial_court
     button: |
       **Kane County courthouse:**
-      % if kane_district == 52:
+      % if kane_district == "52":
       ${ "Kane County Courthouse, 100 S. 3rd Street, Geneva" }
-      % elif kane_district == 53:
+      % elif kane_district == "53":
       ${ "Kane County Judicial Center, 37W777 Route 38, St. Charles" }
-      % else:
+      % elif kane_district == "54":
       ${ "Kane County Juvenile Justice Center, 37W655 Route 38, St. Charles" }
+      % else:
+      No courthouse selected
       % endif      
     show if: trial_court_index == -2
 
@@ -3044,20 +3046,22 @@ review:
         - trial_court
     button: |
       **Cook County courthouse:**
-      % if cook_district == 15:
+      % if cook_district == "15":
       ${ "Daley Center, 50 W. Washington Street, Chicago" }
-      % elif cook_district == 16:
+      % elif cook_district == "16":
       ${ "Second Municipal District, 5600 Old Orchard Road, Skokie" }
-      % elif cook_district == 17:
+      % elif cook_district == "17":
       ${ "Third Municipal District, 2121 Euclid Avenue, Rolling Meadows" }
-      % elif cook_district == 18:
+      % elif cook_district == "18":
       ${ "Fourth Municipal District, 1500 Maybrook Drive, Maywood" }
-      % elif cook_district == 19:
+      % elif cook_district == "19":
       ${ "Fifth Municipal District, 10220 S. 76th Avenue, Bridgeview" }
-      % elif cook_district == 20:
+      % elif cook_district == "20":
       ${ "Sixth Municipal District, 16501 South Kedzie Parkway, Markham" }
-      % else:
+      % elif cook_district == "21":
       ${ "Domestic Violence Court, 555 W. Harrison Street, Chicago" }
+      % else:
+      No courthouse selected
       % endif      
     show if: trial_court_index == -1
 
@@ -3067,12 +3071,14 @@ review:
         - trial_court
     button: |
       **Kane County courthouse:**
-      % if kane_district == 52:
+      % if kane_district == "52":
       ${ "Kane County Courthouse, 100 S. 3rd Street, Geneva" }
-      % elif kane_district == 53:
+      % elif kane_district == "53":
       ${ "Kane County Judicial Center, 37W777 Route 38, St. Charles" }
-      % else:
+      % elif kane_district == "54":
       ${ "Kane County Juvenile Justice Center, 37W655 Route 38, St. Charles" }
+      % else:
+      No courthouse selected
       % endif      
     show if: trial_court_index == -2
   
